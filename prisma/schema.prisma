@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model categories {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  code        String      @unique
+  icon        String      @default("📦")
+  color       String      @default("#3b82f6")
+  description String?
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  equipment   equipment[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model departments {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  color       String?     @default("#6b7280")
+  description String?
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  employees   employees[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model employees {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  department_id String?      @db.Uuid
+  phone         String?
+  is_active     Boolean?     @default(true)
+  created_at    DateTime?    @default(now()) @db.Timestamptz(6)
+  departments   departments? @relation(fields: [department_id], references: [id], onUpdate: NoAction)
+  loans         loans[]
+
+  @@index([department_id], map: "idx_employees_department")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model equipment {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id       String         @db.Uuid
+  sequential_number Int
+  display_number    String
+  serial_number     String?
+  status            String         @default("available")
+  condition         String         @default("good")
+  description       String?
+  location          String?
+  acquisition_date  DateTime?      @db.Date
+  created_at        DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?      @default(now()) @db.Timestamptz(6)
+  categories        categories     @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  incidents         incidents[]
+  loan_items        loan_items[]
+  maintenances      maintenances[]
+
+  @@unique([category_id, sequential_number])
+  @@index([category_id], map: "idx_equipment_category")
+  @@index([status], map: "idx_equipment_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model incidents {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  equipment_id String    @db.Uuid
+  reported_at  DateTime  @default(now()) @db.Timestamptz(6)
+  description  String
+  reported_by  String?
+  resolved_at  DateTime? @db.Timestamptz(6)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  equipment    equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([equipment_id], map: "idx_incidents_equipment")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model loan_items {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  loan_id          String    @db.Uuid
+  equipment_id     String    @db.Uuid
+  return_condition String?
+  return_notes     String?
+  equipment        equipment @relation(fields: [equipment_id], references: [id], onUpdate: NoAction)
+  loans            loans     @relation(fields: [loan_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([loan_id, equipment_id])
+  @@index([equipment_id], map: "idx_loan_items_equipment")
+  @@index([loan_id], map: "idx_loan_items_loan")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model loans {
+  id                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id          String       @db.Uuid
+  checkout_date        DateTime     @default(dbgenerated("CURRENT_DATE")) @db.Date
+  checkout_time        DateTime     @default(dbgenerated("CURRENT_TIME")) @db.Time(6)
+  expected_return_date DateTime?    @db.Date
+  return_date          DateTime?    @db.Date
+  return_time          DateTime?    @db.Time(6)
+  checkout_notes       String?
+  return_notes         String?
+  processed_by         String?
+  status               String       @default("active")
+  created_at           DateTime?    @default(now()) @db.Timestamptz(6)
+  loan_items           loan_items[]
+  employees            employees    @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+
+  @@index([employee_id], map: "idx_loans_employee")
+  @@index([status], map: "idx_loans_status")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model maintenances {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  equipment_id String    @db.Uuid
+  performed_at DateTime  @db.Date
+  description  String
+  performed_by String?
+  cost         Decimal?  @db.Decimal
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  equipment    equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([equipment_id], map: "idx_maintenances_equip")
+}
+
+// ─── Comptes applicatifs (auth Supabase + rôle) ──────────────────────────
+model Profile {
+  id        String   @id @db.Uuid
+  full_name String?
+  role      String   @default("user")
+  created_at DateTime @default(now())
+
+  @@map("profiles")
+}
+
+// ─── Photos d'équipement ──────────────────────────────────────────────────
+model EquipmentPhoto {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  equipment_id String   @db.Uuid
+  url          String
+  created_at   DateTime @default(now())
+
+  @@map("equipment_photos")
+}
