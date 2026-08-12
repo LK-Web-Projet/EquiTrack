@@ -1,45 +1,78 @@
-# 🚲 CycleCheck
+# 🚲 EquiTrack
 
-**CycleCheck** est une application web moderne (PWA-ready) conçue pour la gestion de flotte de vélos sur le terrain. Elle permet aux techniciens de recenser l'état matériel des vélos, de prendre des photos des dégradations, et de générer de puissants rapports PDF pour l'atelier.
-
-## ✨ Fonctionnalités Principales
-
-- **Diagnostic Terrain** : Ajout rapide de vélos et notation de l'état des pièces (Bon, À réparer, À remplacer). Pièces personnalisables par l'utilisateur.
-- **Photos Intégrées** : Capture d'image depuis la caméra du téléphone ou l'ordinateur, avec algorithme de compression automatique (JPEG 800px) pour préserver le stockage.
-- **Intelligence Métier (Dashboard)** : Calculs automatiques du "Taux de Santé" global de la flotte et du Top 3 des pannes fréquentes.
-- **Génération de PDF Pro** : Création instantanée de rapports structurés et design (Inventaire Global, Vélos à réparer, Liste de courses des pièces).
-- **Interface Premium** : Design en Tailwind CSS v4 avec prise en charge native du mode Sombre (Dark Mode) et Clair (Light Mode).
-- **100% Hors-Ligne & Sécurisé (Client-Side)** : L'application stocke les données localement sans base de données externe. Un module d'Export (Sauvegarde JSON) et d'Import permet de sécuriser les données manuellement.
+**EquiTrack** est une application web (Next.js) de gestion de flotte de vélos sur le terrain. Elle permet aux techniciens de recenser l'état matériel des vélos, de prendre des photos des dégradations, d'obtenir un diagnostic assisté par IA, et de générer des rapports PDF pour l'atelier.
 
 ## 🛠️ Stack Technique
 
-- **Framework** : [Next.js](https://nextjs.org/) (React 19)
+- **Framework** : [Next.js 16](https://nextjs.org/) (React 19, TypeScript)
 - **Style** : [Tailwind CSS v4](https://tailwindcss.com/)
-- **State Management** : [Zustand](https://zustand-demo.pmnd.rs/) (Persistance LocalStorage)
+- **Base de données** : PostgreSQL via [Prisma ORM](https://www.prisma.io/) (`@prisma/client`, `@prisma/adapter-pg`, `pg`)
+- **Auth / Backend as a Service** : [Supabase](https://supabase.com/) (`@supabase/supabase-js`, `@supabase/ssr`) — Auth, base de données, service role
+- **IA** : [Anthropic Claude SDK](https://docs.anthropic.com/) (`@anthropic-ai/sdk`) — diagnostic d'incidents et analyse de flotte
+- **State Management** : [Zustand](https://zustand-demo.pmnd.rs/)
 - **Icônes** : [Lucide React](https://lucide.dev/)
+- **QR Code** : `html5-qrcode`, `qrcode.react`
 - **Génération PDF** : `jspdf` & `jspdf-autotable`
+- **Dates** : `date-fns`
+- **Runtime scripts** : `tsx`
 
 ## 🚀 Installation & Lancement Rapide
 
-Assurez-vous d'avoir [Node.js](https://nodejs.org/) installé sur votre machine.
-
 ```bash
-# 1. Cloner ou ouvrir le projet
-cd cycle_check
+# 1. Installer les dépendances
+pnpm install
 
-# 2. Installer les dépendances
-npm install
+# 2. Générer le client Prisma
+pnpm db:generate
 
 # 3. Lancer le serveur de développement
-npm run dev
+pnpm dev
 ```
 
 Ouvrez ensuite votre navigateur sur `http://localhost:3000`.
 
-## 📦 Sauvegarde & Sécurité des Données
+### Scripts utiles
 
-⚠️ **Important** : L'architecture actuelle sauvegarde vos vélos directement dans la mémoire du navigateur (*LocalStorage*). Si vous videz votre cache, vous perdrez ces données.
-👉 Rendez-vous dans les "Paramètres > Sécurité des données" pour utiliser l'outil d'**Export** à la fin de chaque journée et stocker votre fichier `.json`. Vous pourrez le ré-importer si besoin !
+| Commande | Description |
+|---|---|
+| `pnpm dev` | Lance le serveur de développement |
+| `pnpm build` | Build de production |
+| `pnpm start` | Lance le serveur en production |
+| `pnpm lint` | Lint du code |
+| `pnpm db:pull` | Synchronise le schéma Prisma depuis la base |
+| `pnpm db:migrate` | Applique les migrations Prisma (dev) |
+| `pnpm db:generate` | Génère le client Prisma |
+| `pnpm db:studio` | Ouvre Prisma Studio |
+| `pnpm db:seed` | Seed la base de données |
+| `pnpm db:backup` | Backup de la base de données |
+| `pnpm db:reset` | Réinitialise la base de données |
+
+## 🔑 Variables d'environnement (VPS)
+
+À initialiser sur le serveur (fichier `.env` ou `.env.local`, jamais commité — voir `.gitignore`) :
+
+```bash
+# --- Supabase ---
+NEXT_PUBLIC_SUPABASE_URL=            # URL du projet Supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=       # Clé publique (anon/publishable)
+SUPABASE_SERVICE_ROLE_KEY=           # Clé service role (accès admin, à garder secrète, jamais exposée côté client)
+
+# --- Base de données (Prisma) ---
+DATABASE_URL=                        # Connexion PostgreSQL, ex: postgresql://user:password@host:5432/dbname
+
+# --- IA (Anthropic Claude) ---
+ANTHROPIC_API_KEY=                   # Clé API Anthropic (diagnostic incidents / analyse de flotte)
+
+# --- Seed admin (utilisé par pnpm db:seed) ---
+SEED_ADMIN_EMAIL=
+SEED_ADMIN_PASSWORD=
+SEED_ADMIN_NAME=
+```
+
+⚠️ **Sécurité** :
+- `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL` et `ANTHROPIC_API_KEY` sont des secrets sensibles : ne jamais les committer, ne jamais les préfixer `NEXT_PUBLIC_`.
+- Seules les variables préfixées `NEXT_PUBLIC_` sont exposées au navigateur.
+- En production, définir ces variables directement dans l'environnement du VPS (ex: fichier `.env` chargé par le process manager, ou variables systemd/PM2/Docker), pas dans un fichier suivi par git.
 
 ---
-*Conçu et développé sur-mesure pour la gestion professionnelle de flottes de vélos rapides.*
+*Développé sur-mesure pour la gestion professionnelle de flottes de vélos.*
