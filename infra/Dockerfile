@@ -35,10 +35,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Prisma CLI pour migrations au démarrage (deps résolues isolément, voir stage prisma-cli)
+# Prisma CLI pour migrations au démarrage (deps résolues isolément, voir stage prisma-cli).
+# Copié dans un dossier séparé (pas ./node_modules) : le node_modules issu du build standalone
+# pnpm contient des symlinks (ex. react) que Docker ne peut pas fusionner avec un dossier réel.
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=prisma-cli --chown=nextjs:nodejs /prisma/node_modules ./node_modules
+COPY --from=prisma-cli --chown=nextjs:nodejs /prisma/node_modules ./prisma-cli/node_modules
 
 USER nextjs
 EXPOSE 3000
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
+CMD ["sh", "-c", "node prisma-cli/node_modules/prisma/build/index.js migrate deploy && node server.js"]
