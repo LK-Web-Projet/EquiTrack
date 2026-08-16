@@ -9,6 +9,7 @@ const supabaseHostname = (() => {
 })();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     remotePatterns: supabaseHostname
       ? [{ protocol: 'https', hostname: supabaseHostname, pathname: '/storage/v1/object/public/**' }]
