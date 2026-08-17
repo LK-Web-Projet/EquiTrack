@@ -6,6 +6,7 @@ RUN npm install -g pnpm@9
 
 COPY package.json pnpm-lock.yaml ./
 RUN node -p "const p=require('./package.json'); (p.dependencies?.prisma || p.devDependencies?.prisma).replace(/^[\^~]/, '')" > /tmp/prisma-version
+RUN node -p "const p=require('./package.json'); (p.dependencies?.dotenv || p.devDependencies?.dotenv).replace(/^[\^~]/, '')" > /tmp/dotenv-version
 RUN pnpm install --frozen-lockfile
 
 COPY . .
@@ -19,7 +20,8 @@ RUN npm run build
 FROM node:22-alpine AS prisma-cli
 WORKDIR /prisma
 COPY --from=builder /tmp/prisma-version ./prisma-version
-RUN npm install --no-save prisma@$(cat prisma-version)
+COPY --from=builder /tmp/dotenv-version ./dotenv-version
+RUN npm install --no-save prisma@$(cat prisma-version) dotenv@$(cat dotenv-version)
 
 # ── Runner ─────────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
@@ -39,7 +41,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # Copié dans un dossier séparé (pas ./node_modules) : le node_modules issu du build standalone
 # pnpm contient des symlinks (ex. react) que Docker ne peut pas fusionner avec un dossier réel.
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=prisma-cli --chown=nextjs:nodejs /prisma/node_modules ./prisma-cli/node_modules
+# prisma.config.ts importe dotenv — copié isolément (pas de fusion) directement à l'endroit
+# où Node le résout depuis /app/prisma.config.ts.
+COPY --from=prisma-cli --chown=nextjs:nodejs /prisma/node_modules/dotenv ./node_modules/dotenv
 
 USER nextjs
 EXPOSE 3000
