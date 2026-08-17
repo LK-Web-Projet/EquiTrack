@@ -32,6 +32,7 @@ jobs:
           context: .
           file: infra/Dockerfile
           push: true
+          no-cache: true
           tags: ${{ env.IMAGE }}:latest,${{ env.IMAGE }}:${{ github.sha }}
 
   deploy:
@@ -70,6 +71,7 @@ jobs:
           package-name: equitrack
           package-type: container
           min-versions-to-keep: 3
+          delete-only-untagged-versions: true
           token: ${{ secrets.GHCR_TOKEN }}
 
   notify:
