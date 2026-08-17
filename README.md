@@ -10,6 +10,7 @@ Application de gestion et de suivi d'équipements pour entreprise : catalogue pa
 - Stockage des photos d'équipement sur disque (volume Docker en prod), servi via une route API protégée par l'authentification
 - **Tailwind CSS v4**, **Zustand** (état UI uniquement), **jsPDF** (rapports), **date-fns** (locale FR)
 - **Anthropic SDK** pour deux fonctionnalités IA optionnelles (actuellement masquées, voir plus bas)
+- Gestionnaire de paquets : **pnpm**
 
 L'application ne dépend d'aucun service tiers géré (pas de Supabase, pas d'auth SaaS) : tout tourne sur un Postgres classique.
 
@@ -17,7 +18,7 @@ L'application ne dépend d'aucun service tiers géré (pas de Supabase, pas d'au
 
 ### 1. Prérequis
 
-- Node.js 20+
+- Node.js 20+, pnpm
 - Un Postgres 16 accessible (local, Docker, ou distant)
 
 ### 2. Configuration
@@ -29,16 +30,17 @@ Copier `.env.local.example` en `.env.local` et renseigner :
 | `DATABASE_URL` | Chaîne de connexion Postgres, utilisée par Prisma CLI et par l'app au runtime |
 | `JWT_SECRET` | Secret de signature des sessions — une valeur aléatoire longue, différente par environnement |
 | `UPLOADS_DIR` | Dossier de stockage des photos d'équipement, **hors de `public/`** (ex. `./data/uploads` en local, un volume Docker nommé en prod) |
-| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` | Premier compte admin, créé par `npm run db:seed` |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` | Premier compte admin, créé par `pnpm db:seed` |
 | `ANTHROPIC_API_KEY` | Optionnel — nécessaire uniquement si les fonctionnalités IA sont réactivées |
 
 ### 3. Installation et base de données
 
 ```bash
-npm install
+pnpm install
+pnpm db:generate            # génère le client Prisma
 npx prisma migrate deploy   # crée les tables sur DATABASE_URL
-npm run db:seed             # crée le premier compte admin
-npm run dev
+pnpm db:seed                # crée le premier compte admin
+pnpm dev
 ```
 
 L'app est disponible sur `http://localhost:3000`. Se connecter avec les identifiants `SEED_ADMIN_*`.
@@ -47,15 +49,16 @@ L'app est disponible sur `http://localhost:3000`. Se connecter avec les identifi
 
 | Commande | Description |
 |---|---|
-| `npm run dev` | Serveur de développement |
-| `npm run build` / `npm run start` | Build et exécution en production |
-| `npm run lint` | ESLint |
-| `npm run db:migrate` | Crée/applique une migration Prisma en dev (`prisma migrate dev`) |
-| `npm run db:generate` | Régénère le client Prisma après modification du schéma |
-| `npm run db:studio` | Interface Prisma Studio |
-| `npm run db:seed` | Crée/rétablit le premier compte admin (idempotent) |
-| `npm run db:backup` | Exporte toutes les données (hors mots de passe) vers `backups/backup-<date>.json` |
-| `npm run db:reset -- --yes` | Vide les données métier (garde les comptes utilisateurs) — sans `--yes`, affiche un aperçu sans rien supprimer |
+| `pnpm dev` | Serveur de développement |
+| `pnpm build` / `pnpm start` | Build et exécution en production |
+| `pnpm lint` | ESLint |
+| `pnpm db:pull` | Synchronise le schéma Prisma depuis la base |
+| `pnpm db:migrate` | Crée/applique une migration Prisma en dev (`prisma migrate dev`) |
+| `pnpm db:generate` | Régénère le client Prisma après modification du schéma |
+| `pnpm db:studio` | Interface Prisma Studio |
+| `pnpm db:seed` | Crée/rétablit le premier compte admin (idempotent) |
+| `pnpm db:backup` | Exporte toutes les données (hors mots de passe) vers `backups/backup-<date>.json` |
+| `pnpm db:reset -- --yes` | Vide les données métier (garde les comptes utilisateurs) — sans `--yes`, affiche un aperçu sans rien supprimer |
 
 ## Architecture
 
@@ -86,7 +89,34 @@ L'app est disponible sur `http://localhost:3000`. Se connecter avec les identifi
 
 ## Déploiement
 
-- Image Docker (build standalone Next.js), CI/CD, reverse-proxy TLS — comme les autres apps de l'infra.
-- Base Postgres dédiée : `DATABASE_URL` pointe dessus, migrations appliquées via `npx prisma migrate deploy` au démarrage du conteneur.
+- Image Docker (`infra/Dockerfile`, build standalone Next.js via pnpm), CI/CD GitHub Actions (`.github/workflows/deploy.yml`), reverse-proxy TLS — comme les autres apps de l'infra.
+- Le conteneur applique automatiquement les migrations au démarrage (`prisma migrate deploy`) avant de lancer le serveur.
+- Base Postgres dédiée : `DATABASE_URL` pointe dessus.
 - Volume nommé monté sur le chemin donné par `UPLOADS_DIR` pour la persistance des photos entre redéploiements.
-- Variables requises en prod : `DATABASE_URL`, `JWT_SECRET`, `UPLOADS_DIR`, `SEED_ADMIN_*` (première mise en service), `ANTHROPIC_API_KEY` (si IA activée).
+
+### Variables d'environnement (VPS)
+
+À initialiser sur le serveur (jamais committées — voir `.gitignore`) :
+
+```bash
+# --- Base de données ---
+DATABASE_URL=                        # postgresql://user:password@host:5432/dbname
+
+# --- Authentification ---
+JWT_SECRET=                          # valeur aléatoire longue, propre à cet environnement
+
+# --- Stockage des photos ---
+UPLOADS_DIR=                         # chemin du volume Docker persistant, ex: /data/uploads
+
+# --- IA (Anthropic Claude), optionnel ---
+ANTHROPIC_API_KEY=
+
+# --- Premier compte admin (pnpm db:seed) ---
+SEED_ADMIN_EMAIL=
+SEED_ADMIN_PASSWORD=
+SEED_ADMIN_NAME=
+```
+
+⚠️ **Sécurité** :
+- `DATABASE_URL`, `JWT_SECRET` et `ANTHROPIC_API_KEY` sont des secrets sensibles : ne jamais les committer.
+- En production, définir ces variables directement dans l'environnement du VPS (Docker/systemd/PM2), pas dans un fichier suivi par git.
