@@ -1,7 +1,7 @@
 // Vide toutes les données métier de la base (catégories, départements,
 // employés, équipements, emprunts, incidents, maintenances, photos).
-// Les comptes utilisateurs (table profiles + comptes Supabase Auth) sont
-// PRÉSERVÉS — tu restes connecté après le reset.
+// Les comptes utilisateurs (table users) sont PRÉSERVÉS — tu restes
+// connecté après le reset.
 //
 // Par sécurité, ne fait rien sans le flag --yes (sinon affiche juste un
 // aperçu des lignes qui seraient supprimées).
@@ -19,7 +19,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
 
 // Ordre sans importance : TRUNCATE ... CASCADE gère les dépendances de clés
-// étrangères. "profiles" est volontairement absent de cette liste.
+// étrangères. "users" est volontairement absent de cette liste.
 const TABLES = [
   'equipment_photos', 'incidents', 'maintenances', 'loan_items',
   'loans', 'equipment', 'employees', 'departments', 'categories',
@@ -42,7 +42,7 @@ async function main() {
   }
 
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${TABLES.join(', ')} RESTART IDENTITY CASCADE`)
-  console.log('\n✓ Données métier vidées. Comptes utilisateurs (profiles) conservés.')
+  console.log('\n✓ Données métier vidées. Comptes utilisateurs (users) conservés.')
 }
 
 main()

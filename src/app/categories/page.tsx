@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Pencil, Trash2, Layers, Package } from 'lucide-react';
-import { getCategories, deleteCategory } from '@/lib/supabase';
-import { supabase } from '@/lib/supabase';
+import { getCategories, deleteCategory, getEquipment } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Category } from '@/types';
@@ -31,19 +30,17 @@ export default function CategoriesPage() {
     try {
       const cats = await getCategories();
       setCategories(cats);
-      const { data } = await supabase.from('equipment').select('category_id, status');
-      if (data) {
-        const m: Record<string, CatStats> = {};
-        for (const row of data) {
-          if (!m[row.category_id]) m[row.category_id] = { total: 0, available: 0, borrowed: 0, broken: 0, maintenance: 0 };
-          m[row.category_id].total++;
-          if (row.status === 'available') m[row.category_id].available++;
-          if (row.status === 'borrowed') m[row.category_id].borrowed++;
-          if (row.status === 'broken') m[row.category_id].broken++;
-          if (row.status === 'maintenance') m[row.category_id].maintenance++;
-        }
-        setStats(m);
+      const data = await getEquipment();
+      const m: Record<string, CatStats> = {};
+      for (const row of data) {
+        if (!m[row.category_id]) m[row.category_id] = { total: 0, available: 0, borrowed: 0, broken: 0, maintenance: 0 };
+        m[row.category_id].total++;
+        if (row.status === 'available') m[row.category_id].available++;
+        if (row.status === 'borrowed') m[row.category_id].borrowed++;
+        if (row.status === 'broken') m[row.category_id].broken++;
+        if (row.status === 'maintenance') m[row.category_id].maintenance++;
       }
+      setStats(m);
     } catch (e) {
       console.error(e);
     } finally {

@@ -13,9 +13,9 @@ import {
   getIncidents, createIncident, resolveIncident, deleteIncident,
   getMaintenances, createMaintenance, deleteMaintenance,
   getEquipmentPhotos, uploadEquipmentPhoto, deleteEquipmentPhoto,
-} from '@/lib/supabase';
-import type { Incident, Maintenance, EquipmentPhoto } from '@/lib/supabase';
-import { supabase } from '@/lib/supabase';
+  getEquipmentLoanHistory,
+} from '@/lib/api';
+import type { Incident, Maintenance, EquipmentPhoto } from '@/lib/api';
 import { QRCodeCard } from '@/components/ui/QRCodeCard';
 import CameraCapture from '@/components/ui/CameraCapture';
 import ImageModal from '@/components/ui/ImageModal';
@@ -92,29 +92,17 @@ export default function EquipmentDetailPage() {
         setNewStatus(eq.status);
 
         const [loanData, incs, maints, pics] = await Promise.all([
-          supabase
-            .from('loan_items')
-            .select('loan_id, return_condition, loan:loans(status, checkout_date, return_date, employee:employees(name, department:departments(name)))')
-            .eq('equipment_id', id)
-            .order('loan_id', { ascending: false }),
+          getEquipmentLoanHistory(id),
           getIncidents(id),
           getMaintenances(id),
           getEquipmentPhotos(id),
         ]);
 
-        if (loanData.data) {
-          setHistory(loanData.data.map((item: unknown) => {
-            const d = item as {
-              loan_id: string; return_condition?: string;
-              loan: { status: string; checkout_date: string; return_date?: string; employee: { name: string; department?: { name: string } } };
-            };
-            return {
-              loan_id: d.loan_id, employee_name: d.loan?.employee?.name ?? '—',
-              department_name: d.loan?.employee?.department?.name, checkout_date: d.loan?.checkout_date,
-              return_date: d.loan?.return_date, status: d.loan?.status, return_condition: d.return_condition,
-            };
-          }));
-        }
+        setHistory(loanData.map(d => ({
+          loan_id: d.loan_id, employee_name: d.loan?.employee?.name ?? '—',
+          department_name: d.loan?.employee?.department?.name, checkout_date: d.loan?.checkout_date,
+          return_date: d.loan?.return_date, status: d.loan?.status, return_condition: d.return_condition,
+        })));
         setIncidents(incs);
         setMaintenances(maints);
         setPhotos(pics);

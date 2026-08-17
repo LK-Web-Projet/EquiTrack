@@ -7,7 +7,7 @@ import {
   ArrowLeft, Plus, Package, Pencil, Trash2, Eye,
   X, Save, MapPin, Tag, FileText, Calendar
 } from 'lucide-react';
-import { getCategories, getEquipment, updateEquipment, deleteEquipment } from '@/lib/supabase';
+import { getCategories, getEquipment, updateEquipment, deleteEquipment } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Category, Equipment, EquipmentStatus, EquipmentCondition } from '@/types';

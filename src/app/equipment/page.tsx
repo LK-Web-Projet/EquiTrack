@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Search, Package, Eye, RefreshCw } from 'lucide-react';
-import { getEquipment, getCategories, updateEquipment } from '@/lib/supabase';
+import { getEquipment, getCategories, updateEquipment } from '@/lib/api';
 import type { Equipment, Category, EquipmentStatus } from '@/types';
 
 const STATUS_LABELS: Record<EquipmentStatus, string> = {

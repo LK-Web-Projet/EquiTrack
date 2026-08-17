@@ -7,7 +7,7 @@ import {
   ArrowLeft, Pencil, UserX, UserCheck, Check,
   X, Phone, Plus, Trash2
 } from 'lucide-react';
-import { getEmployee, updateEmployee, deleteEmployee, getDepartments, getLoans } from '@/lib/supabase';
+import { getEmployee, updateEmployee, deleteEmployee, getDepartments, getLoans } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import type { Employee, Department, Loan } from '@/types';
 import { format } from 'date-fns';

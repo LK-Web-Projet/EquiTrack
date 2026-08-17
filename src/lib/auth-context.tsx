@@ -2,18 +2,17 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import type { User } from '@supabase/supabase-js';
 
 export interface Profile {
   id: string;
+  email: string;
   full_name: string | null;
   role: 'admin' | 'user';
   created_at: string;
 }
 
 interface AuthContextValue {
-  user: User | null;
+  user: Profile | null;
   profile: Profile | null;
   loading: boolean;
   isAdmin: boolean;
@@ -23,7 +22,6 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -31,41 +29,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const loadProfile = async (userId: string) => {
-      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-      if (mounted) setProfile(data ?? null);
-    };
-
-    supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return;
-      setUser(data.user);
-      if (data.user) loadProfile(data.user.id);
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-    });
+    fetch('/api/auth/me')
+      .then(res => (res.ok ? res.json() : { user: null }))
+      .then(({ user }) => {
+        if (mounted) setProfile(user ?? null);
+      })
+      .catch(() => {
+        if (mounted) setProfile(null);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
     router.refresh();
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin: profile?.role === 'admin', signOut }}>
+    <AuthContext.Provider value={{ user: profile, profile, loading, isAdmin: profile?.role === 'admin', signOut }}>
       {children}
     </AuthContext.Provider>
   );

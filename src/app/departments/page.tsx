@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, Check, X, Building2 } from 'lucide-react';
-import { getDepartments, createDepartment, updateDepartment, deleteDepartment, getEmployees } from '@/lib/supabase';
+import { getDepartments, createDepartment, updateDepartment, deleteDepartment, getEmployees } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Department } from '@/types';

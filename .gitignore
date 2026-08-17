@@ -39,6 +39,9 @@ yarn-error.log*
 # database backups (contain real employee/equipment data)
 /backups
 
+# photos d'équipement uploadées en local (dev) — en Docker, sur un volume
+/data/uploads
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

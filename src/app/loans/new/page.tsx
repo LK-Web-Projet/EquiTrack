@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, Search, Plus, X, User, Package } from 'lucide-react';
-import { getEmployees, getCategories, getEquipment, createLoan } from '@/lib/supabase';
+import { getEmployees, getCategories, getEquipment, createLoan } from '@/lib/api';
 import type { Employee, Category, Equipment } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Download, Package, ArrowLeftRight, AlertTriangle, Clock, Layers, Building2, User, Calendar } from 'lucide-react';
-import { getEquipment, getLoans, getCategories, getDepartments, getEmployees } from '@/lib/supabase';
+import { getEquipment, getLoans, getCategories, getDepartments, getEmployees } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

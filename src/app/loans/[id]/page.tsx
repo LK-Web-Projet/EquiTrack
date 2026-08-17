@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Clock, User, FileText, ChevronsDown } from 'lucide-react';
-import { getLoan, returnLoan } from '@/lib/supabase';
+import { getLoan, returnLoan } from '@/lib/api';
 import type { Loan, LoanItem, ReturnCondition } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

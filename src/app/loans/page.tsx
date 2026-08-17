@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Search, ArrowLeftRight, Clock } from 'lucide-react';
-import { getLoans } from '@/lib/supabase';
+import { getLoans } from '@/lib/api';
 import type { Loan } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

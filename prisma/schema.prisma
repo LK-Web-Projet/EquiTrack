@@ -133,14 +133,18 @@ model maintenances {
   @@index([equipment_id], map: "idx_maintenances_equip")
 }
 
-// ─── Comptes applicatifs (auth Supabase + rôle) ──────────────────────────
-model Profile {
-  id        String   @id @db.Uuid
-  full_name String?
-  role      String   @default("user")
-  created_at DateTime @default(now())
+// ─── Comptes applicatifs (auth maison + rôle) ────────────────────────────
+model User {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String   @unique
+  password_hash String
+  full_name     String?
+  role          String   @default("user")
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @default(now()) @updatedAt
 
-  @@map("profiles")
+  @@map("users")
 }
 
 // ─── Photos d'équipement ──────────────────────────────────────────────────

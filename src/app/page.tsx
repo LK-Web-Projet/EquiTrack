@@ -6,7 +6,7 @@ import {
   Package, ArrowLeftRight, CheckCircle2, AlertCircle,
   Wrench, Plus, Clock, ArrowRight, Layers, Users
 } from 'lucide-react';
-import { getDashboardStats, getLoans, getCategories } from '@/lib/supabase';
+import { getDashboardStats, getLoans, getCategories, getEquipment, getRecentIncidents } from '@/lib/api';
 import type { DashboardStats, Loan, Category } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -33,23 +33,20 @@ export default function DashboardPage() {
         setRecentLoans(loans.slice(0, 5));
         setCategories(cats);
 
-        const { supabase } = await import('@/lib/supabase');
-        const [{ data: eqData }, { data: incData }] = await Promise.all([
-          supabase.from('equipment').select('category_id, status'),
-          supabase.from('incidents').select('description, resolved_at').order('created_at', { ascending: false }).limit(10),
+        const [eqData, incData] = await Promise.all([
+          getEquipment(),
+          getRecentIncidents(10),
         ]);
-        if (eqData) {
-          const m: Record<string, { total: number; available: number; borrowed: number; broken: number }> = {};
-          for (const row of eqData) {
-            if (!m[row.category_id]) m[row.category_id] = { total: 0, available: 0, borrowed: 0, broken: 0 };
-            m[row.category_id].total++;
-            if (row.status === 'available') m[row.category_id].available++;
-            if (row.status === 'borrowed') m[row.category_id].borrowed++;
-            if (row.status === 'broken') m[row.category_id].broken++;
-          }
-          setCatStats(m);
+        const m: Record<string, { total: number; available: number; borrowed: number; broken: number }> = {};
+        for (const row of eqData) {
+          if (!m[row.category_id]) m[row.category_id] = { total: 0, available: 0, borrowed: 0, broken: 0 };
+          m[row.category_id].total++;
+          if (row.status === 'available') m[row.category_id].available++;
+          if (row.status === 'borrowed') m[row.category_id].borrowed++;
+          if (row.status === 'broken') m[row.category_id].broken++;
         }
-        if (incData) setRecentIncidents(incData);
+        setCatStats(m);
+        setRecentIncidents(incData);
       } catch (e) {
         console.error(e);
       } finally {

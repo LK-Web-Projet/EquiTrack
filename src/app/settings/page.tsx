@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Info, Database, Download, Upload, CheckCircle2, XCircle, Loader } from 'lucide-react';
-import { supabase, getCategories, getDepartments, getEmployees, getEquipment, getLoans } from '@/lib/supabase';
+import { getCategories, getDepartments, getEmployees, getEquipment, getLoans } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 
 const APP_VERSION = '1.0.0';
@@ -17,29 +17,14 @@ export default function SettingsPage() {
   const [exportError, setExportError] = useState('');
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState('');
-  const [supabaseUrl, setSupabaseUrl] = useState('');
-
-  useEffect(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-    setSupabaseUrl(url);
-  }, []);
-
-  const maskUrl = (url: string) => {
-    if (!url) return '(non configurée)';
-    try {
-      const u = new URL(url);
-      return `${u.protocol}//***.${u.hostname.split('.').slice(-2).join('.')}`;
-    } catch {
-      return url.slice(0, 20) + '***';
-    }
-  };
 
   const testConnection = async () => {
     setDbStatus('checking');
     setDbError('');
     try {
-      const { error } = await supabase.from('categories').select('id').limit(1);
-      if (error) throw error;
+      const res = await fetch('/api/settings/ping');
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `Erreur ${res.status}`);
       setDbStatus('ok');
     } catch (e: unknown) {
       setDbStatus('error');
@@ -86,38 +71,15 @@ export default function SettingsPage() {
       const text = await file.text();
       const backup = JSON.parse(text);
       if (!backup.data) throw new Error('Format de fichier invalide');
-      const { categories, departments, employees, equipment } = backup.data;
-      let count = 0;
 
-      if (Array.isArray(categories)) {
-        for (const cat of categories) {
-          await supabase.from('categories').upsert(cat, { onConflict: 'id' });
-          count++;
-        }
-      }
-      if (Array.isArray(departments)) {
-        for (const dept of departments) {
-          await supabase.from('departments').upsert(dept, { onConflict: 'id' });
-          count++;
-        }
-      }
-      if (Array.isArray(employees)) {
-        for (const emp of employees) {
-          const { department, ...rest } = emp;
-          void department;
-          await supabase.from('employees').upsert(rest, { onConflict: 'id' });
-          count++;
-        }
-      }
-      if (Array.isArray(equipment)) {
-        for (const eq of equipment) {
-          const { category, ...rest } = eq;
-          void category;
-          await supabase.from('equipment').upsert(rest, { onConflict: 'id' });
-          count++;
-        }
-      }
-      setImportResult(`Import réussi : ${count} enregistrements restaurés.`);
+      const res = await fetch('/api/settings/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(backup.data),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `Erreur ${res.status}`);
+      setImportResult(`Import réussi : ${body.count} enregistrements restaurés.`);
     } catch (err: unknown) {
       setImportResult('Erreur import : ' + (err instanceof Error ? err.message : String(err)));
     } finally {
@@ -143,13 +105,13 @@ export default function SettingsPage() {
             <div className="p-4 rounded-xl" style={{ background: 'var(--et-surface-2)' }}>
               <p className="text-xs" style={{ color: 'var(--et-text-muted)' }}>Version</p>
               <p className="font-semibold mt-1 font-mono" style={{ color: 'var(--et-text)' }}>v{APP_VERSION}</p>
-              <p className="text-sm" style={{ color: 'var(--et-text-muted)' }}>Next.js 16 + Supabase</p>
+              <p className="text-sm" style={{ color: 'var(--et-text-muted)' }}>Next.js 16 + Postgres</p>
             </div>
           </div>
           <div className="p-4 rounded-xl" style={{ background: 'var(--et-surface-2)' }}>
             <p className="text-xs mb-2" style={{ color: 'var(--et-text-muted)' }}>Stack technique</p>
             <div className="flex flex-wrap gap-2">
-              {['Next.js 16', 'React 19', 'Supabase', 'TypeScript', 'Tailwind CSS v4', 'jsPDF', 'date-fns'].map(t => (
+              {['Next.js 16', 'React 19', 'Postgres', 'Prisma', 'JWT', 'TypeScript', 'Tailwind CSS v4', 'jsPDF', 'date-fns'].map(t => (
                 <span key={t} className="badge badge-neutral">{t}</span>
               ))}
             </div>
@@ -164,10 +126,6 @@ export default function SettingsPage() {
       color: '#10b981',
       content: (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl" style={{ background: 'var(--et-surface-2)' }}>
-            <p className="text-xs mb-1" style={{ color: 'var(--et-text-muted)' }}>URL Supabase (masquée)</p>
-            <p className="font-mono text-sm" style={{ color: 'var(--et-text)' }}>{maskUrl(supabaseUrl)}</p>
-          </div>
           <div className="flex items-center gap-3">
             <button
               onClick={testConnection}

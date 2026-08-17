@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Search, Users, Eye, UserCheck, UserX } from 'lucide-react';
-import { getEmployees, updateEmployee } from '@/lib/supabase';
-import { supabase } from '@/lib/supabase';
+import { getEmployees, updateEmployee, getLoans } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import type { Employee } from '@/types';
 
@@ -22,13 +21,13 @@ export default function EmployeesPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const [emps, { data: loanData }] = await Promise.all([
+      const [emps, activeLoansList] = await Promise.all([
         getEmployees(),
-        supabase.from('loans').select('employee_id').eq('status', 'active'),
+        getLoans('active'),
       ]);
       setEmployees(emps);
       const counts: Record<string, number> = {};
-      for (const l of loanData ?? []) {
+      for (const l of activeLoansList) {
         counts[l.employee_id] = (counts[l.employee_id] ?? 0) + 1;
       }
       setActiveLoans(counts);

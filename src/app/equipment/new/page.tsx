@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Package, Camera, Upload, X } from 'lucide-react';
-import { getCategories, getNextSequentialNumber, createEquipment, uploadEquipmentPhoto } from '@/lib/supabase';
+import { getCategories, getNextSequentialNumber, createEquipment, uploadEquipmentPhoto } from '@/lib/api';
 import CameraCapture from '@/components/ui/CameraCapture';
 import type { Category } from '@/types';
 

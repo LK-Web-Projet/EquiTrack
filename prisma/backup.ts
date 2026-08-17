@@ -3,9 +3,9 @@
 // Lancer avec : npm run db:backup
 // Écrit dans  : backups/backup-<horodatage>.json
 //
-// Ne sauvegarde pas les fichiers du bucket Supabase Storage
-// (equipment-photos) — seulement leurs URLs, stockées dans la table
-// equipment_photos.
+// Ne sauvegarde pas les fichiers uploadés (equipment-photos) — seulement
+// leurs URLs, stockées dans la table equipment_photos. Les mots de passe
+// (password_hash) sont volontairement exclus du JSON exporté.
 
 import { config as loadEnv } from 'dotenv'
 loadEnv({ path: '.env.local' })
@@ -22,7 +22,7 @@ async function main() {
   const [
     categories, departments, employees, equipment,
     loans, loan_items, incidents, maintenances,
-    profiles, equipment_photos,
+    rawUsers, equipment_photos,
   ] = await Promise.all([
     prisma.categories.findMany(),
     prisma.departments.findMany(),
@@ -32,9 +32,12 @@ async function main() {
     prisma.loan_items.findMany(),
     prisma.incidents.findMany(),
     prisma.maintenances.findMany(),
-    prisma.profile.findMany(),
+    prisma.user.findMany(),
     prisma.equipmentPhoto.findMany(),
   ])
+
+  // Jamais de hash de mot de passe dans un backup exporté sur disque.
+  const users = rawUsers.map(({ password_hash: _password_hash, ...rest }) => rest)
 
   const backup = {
     version: 1,
@@ -42,7 +45,7 @@ async function main() {
     data: {
       categories, departments, employees, equipment,
       loans, loan_items, incidents, maintenances,
-      profiles, equipment_photos,
+      users, equipment_photos,
     },
   }
 

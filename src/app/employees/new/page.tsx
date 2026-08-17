@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, UserPlus } from 'lucide-react';
-import { createEmployee, getDepartments } from '@/lib/supabase';
+import { createEmployee, getDepartments } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import type { Department } from '@/types';
 

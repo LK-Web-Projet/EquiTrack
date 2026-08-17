@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, History } from 'lucide-react';
-import { getLoans, getCategories, getEmployees } from '@/lib/supabase';
+import { getLoans, getCategories, getEmployees } from '@/lib/api';
 import type { Loan, Category, Employee } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

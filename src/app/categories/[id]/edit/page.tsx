@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save } from 'lucide-react';
-import { getCategories, updateCategory } from '@/lib/supabase';
+import { getCategories, updateCategory } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import type { Category } from '@/types';
 

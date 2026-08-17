@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Zap, LogIn, Package, ArrowLeftRight, ScanLine, ShieldCheck } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
 const HIGHLIGHTS = [
   { icon: Package,        label: 'Suivi complet du parc d’équipements' },
@@ -24,8 +23,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), password }),
+    });
+    if (!res.ok) {
       setError('Email ou mot de passe incorrect.');
       setLoading(false);
       return;
