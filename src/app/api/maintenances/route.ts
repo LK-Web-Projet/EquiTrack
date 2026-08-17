@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth, withAdmin } from '@/lib/api-auth'
 import { shapeMaintenance, parseDateOnly } from '@/lib/api-shape'
+import { maintenanceCreateSchema, validateBody } from '@/lib/validation'
 
 export const GET = withAuth(async (req: NextRequest) => {
   const url = new URL(req.url)
@@ -18,7 +19,9 @@ export const GET = withAuth(async (req: NextRequest) => {
 })
 
 export const POST = withAdmin(async (req: NextRequest) => {
-  const body = await req.json()
+  const { data: body, error } = validateBody(maintenanceCreateSchema, await req.json())
+  if (error) return error
+
   const m = await prisma.maintenances.create({
     data: { ...body, performed_at: parseDateOnly(body.performed_at)! },
   })

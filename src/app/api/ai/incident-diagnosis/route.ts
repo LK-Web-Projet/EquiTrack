@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { withAuth } from '@/lib/api-auth'
+import { AI_FEATURES_ENABLED } from '@/lib/config'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -7,7 +9,11 @@ const SYSTEM_PROMPT = `Tu es un technicien expert en maintenance d'équipements.
 Tu diagnostiques les incidents et proposes des solutions pratiques en français.
 Sois précis, technique et orienté solution. Réponds UNIQUEMENT en JSON valide.`
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (req: NextRequest) => {
+  if (!AI_FEATURES_ENABLED) {
+    return NextResponse.json({ success: false, error: 'Fonctionnalité IA désactivée' }, { status: 404 })
+  }
+
   try {
     const { description, equipmentName, categoryName, condition, history } = await req.json()
 
@@ -67,4 +73,4 @@ Retourne UNIQUEMENT ce JSON (sans markdown) :
       { status: 500 }
     )
   }
-}
+})

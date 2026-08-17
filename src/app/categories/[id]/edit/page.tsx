@@ -95,26 +95,26 @@ export default function EditCategoryPage() {
             <hr className="divider" />
 
             <div>
-              <label className="et-label">Nom *</label>
-              <input type="text" className="et-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required autoFocus />
+              <label htmlFor="cat-edit-name" className="et-label">Nom <span style={{ color: 'var(--et-danger)' }}>*</span></label>
+              <input id="cat-edit-name" type="text" className="et-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required autoFocus />
             </div>
             <div>
-              <label className="et-label">Code * <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(max 5 caractères)</span></label>
-              <input type="text" className="et-input" maxLength={5} value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required style={{ fontFamily: 'monospace', fontWeight: 700 }} />
+              <label htmlFor="cat-edit-code" className="et-label">Code <span style={{ color: 'var(--et-danger)' }}>*</span> <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(max 5 caractères)</span></label>
+              <input id="cat-edit-code" type="text" className="et-input" maxLength={5} value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required style={{ fontFamily: 'monospace', fontWeight: 700 }} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="et-label">Icône (emoji)</label>
-                <input type="text" className="et-input" value={form.icon} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} style={{ fontSize: '1.5rem', textAlign: 'center' }} />
+                <label htmlFor="cat-edit-icon" className="et-label">Icône (emoji)</label>
+                <input id="cat-edit-icon" type="text" className="et-input" value={form.icon} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} style={{ fontSize: '1.5rem', textAlign: 'center' }} />
               </div>
               <div>
-                <label className="et-label">Couleur</label>
-                <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="et-input" style={{ padding: '0.25rem', height: '2.75rem', cursor: 'pointer' }} />
+                <label htmlFor="cat-edit-color" className="et-label">Couleur</label>
+                <input id="cat-edit-color" type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="et-input" style={{ padding: '0.25rem', height: '2.75rem', cursor: 'pointer' }} />
               </div>
             </div>
             <div>
-              <label className="et-label">Description <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>
-              <textarea className="et-textarea" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+              <label htmlFor="cat-edit-description" className="et-label">Description <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>
+              <textarea id="cat-edit-description" className="et-textarea" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
             </div>
 
             <div className="flex items-center gap-3 pt-2">

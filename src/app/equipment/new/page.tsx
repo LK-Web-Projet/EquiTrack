@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Package, Camera, Upload, X } from 'lucide-react';
@@ -9,6 +9,14 @@ import CameraCapture from '@/components/ui/CameraCapture';
 import type { Category } from '@/types';
 
 export default function NewEquipmentPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewEquipmentForm />
+    </Suspense>
+  );
+}
+
+function NewEquipmentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCat = searchParams.get('category') ?? '';
@@ -146,7 +154,7 @@ export default function NewEquipmentPage() {
                   <p className="eq-number text-base mt-0.5">{nextPreview}</p>
                   {form.quantity > 1 && (
                     <p className="text-xs mt-1" style={{ color: 'var(--et-text-muted)' }}>
-                      Jusqu'à {selectedCat.code}-{String((nextNumber ?? 1) + form.quantity - 1).padStart(3, '0')} ({form.quantity} équipements)
+                      Jusqu&apos;à {selectedCat.code}-{String((nextNumber ?? 1) + form.quantity - 1).padStart(3, '0')} ({form.quantity} équipements)
                     </p>
                   )}
                 </div>
@@ -158,7 +166,7 @@ export default function NewEquipmentPage() {
               {categories.length === 0 ? (
                 <div className="alert alert-warning">
                   <Package className="w-4 h-4 shrink-0" />
-                  Aucune catégorie. <Link href="/categories/new" style={{ textDecoration: 'underline' }}>Créez-en une d'abord.</Link>
+                  Aucune catégorie. <Link href="/categories/new" style={{ textDecoration: 'underline' }}>Créez-en une d&apos;abord.</Link>
                 </div>
               ) : (
                 <select
@@ -269,7 +277,7 @@ export default function NewEquipmentPage() {
             </div>
 
             <div>
-              <label className="et-label">Date d'acquisition <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>
+              <label className="et-label">Date d&apos;acquisition <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>
               <input
                 type="date"
                 className="et-input"

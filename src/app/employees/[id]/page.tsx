@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { getEmployee, updateEmployee, deleteEmployee, getDepartments, getLoans } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
+import { useToast } from '@/components/ui/Toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Employee, Department, Loan } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -17,6 +19,7 @@ export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { loading: adminLoading, isAdmin } = useRequireAdmin();
+  const toast = useToast();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [activeLoans, setActiveLoans] = useState<Loan[]>([]);
@@ -66,7 +69,7 @@ export default function EmployeeDetailPage() {
       setEmployee(updated);
       setEditing(false);
     } catch (e) {
-      alert('Erreur : ' + (e instanceof Error ? e.message : String(e)));
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setSaving(false);
     }
@@ -79,7 +82,7 @@ export default function EmployeeDetailPage() {
       const updated = await updateEmployee(id, { is_active: !employee.is_active });
       setEmployee(updated);
     } catch (e) {
-      alert('Erreur : ' + (e instanceof Error ? e.message : String(e)));
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setToggling(false);
     }
@@ -87,7 +90,7 @@ export default function EmployeeDetailPage() {
 
   const handleDelete = async () => {
     if (activeLoans.length > 0) {
-      alert('Impossible de supprimer un employé avec des emprunts actifs. Traitez d\'abord le retour des équipements.');
+      toast.error('Impossible de supprimer un employé avec des emprunts actifs. Traitez d\'abord le retour des équipements.');
       setShowDeleteConfirm(false);
       return;
     }
@@ -96,7 +99,7 @@ export default function EmployeeDetailPage() {
       await deleteEmployee(id);
       router.push('/employees');
     } catch (e) {
-      alert('Erreur : ' + (e instanceof Error ? e.message : String(e)));
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)));
       setDeleting(false);
       setShowDeleteConfirm(false);
     }
@@ -186,6 +189,7 @@ export default function EmployeeDetailPage() {
             onClick={() => setShowDeleteConfirm(true)}
             className="btn btn-ghost btn-sm btn-icon"
             title="Supprimer l'employé"
+            aria-label="Supprimer l'employé"
           >
             <Trash2 className="w-4 h-4" style={{ color: 'var(--et-danger)' }} />
           </button>
@@ -362,50 +366,19 @@ export default function EmployeeDetailPage() {
       </div>
 
       {/* ════ MODAL CONFIRMATION SUPPRESSION ════ */}
-      {showDeleteConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-        >
-          <div className="card p-6 w-full max-w-sm fade-in space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: 'var(--et-danger-bg)' }}>
-                <Trash2 className="w-5 h-5" style={{ color: 'var(--et-danger)' }} />
-              </div>
-              <div>
-                <p className="font-bold" style={{ color: 'var(--et-text)' }}>Supprimer l&apos;employé</p>
-                <p className="text-sm" style={{ color: 'var(--et-text-muted)' }}>{employee.name}</p>
-              </div>
-            </div>
-
-            {activeLoans.length > 0 ? (
-              <div className="alert alert-warning text-sm">
-                Cet employé a {activeLoans.length} emprunt{activeLoans.length > 1 ? 's' : ''} actif{activeLoans.length > 1 ? 's' : ''}. Traitez d&apos;abord le retour avant de supprimer.
-              </div>
-            ) : (
-              <p className="text-sm" style={{ color: 'var(--et-text-muted)' }}>
-                Cette action est irréversible. L&apos;historique des emprunts sera conservé mais l&apos;employé ne pourra plus emprunter.
-              </p>
-            )}
-
-            <div className="flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-secondary flex-1 justify-center">
-                Annuler
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting || activeLoans.length > 0}
-                className="btn btn-danger flex-1 justify-center"
-              >
-                {deleting ? (
-                  <div className="spinner" style={{ width: '0.875rem', height: '0.875rem', borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} />
-                ) : <Trash2 className="w-3.5 h-3.5" />}
-                {deleting ? 'Suppression…' : 'Supprimer'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title="Supprimer l'employé"
+        message={
+          activeLoans.length > 0
+            ? `${employee.name} a ${activeLoans.length} emprunt${activeLoans.length > 1 ? 's' : ''} actif${activeLoans.length > 1 ? 's' : ''}. Traitez d'abord le retour des équipements avant de supprimer.`
+            : `Supprimer ${employee.name} ? Cette action est irréversible. L'historique des emprunts sera conservé mais l'employé ne pourra plus emprunter.`
+        }
+        confirmLabel={deleting ? 'Suppression…' : 'Supprimer'}
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

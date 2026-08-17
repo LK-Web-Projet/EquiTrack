@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAdmin } from '@/lib/api-auth'
+import { departmentUpdateSchema, validateBody } from '@/lib/validation'
 
 export const PATCH = withAdmin<{ id: string }>(async (req: NextRequest, { params }) => {
   const { id } = await params
-  const body = await req.json()
+  const { data: body, error } = validateBody(departmentUpdateSchema, await req.json())
+  if (error) return error
+
   const data = await prisma.departments.update({ where: { id }, data: body })
   return NextResponse.json({ data })
 })

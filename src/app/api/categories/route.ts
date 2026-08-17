@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth, withAdmin } from '@/lib/api-auth'
+import { categoryCreateSchema, validateBody } from '@/lib/validation'
 
 export const GET = withAuth(async () => {
   const data = await prisma.categories.findMany({ orderBy: { name: 'asc' } })
@@ -8,7 +9,9 @@ export const GET = withAuth(async () => {
 })
 
 export const POST = withAdmin(async (req: NextRequest) => {
-  const body = await req.json()
+  const { data: body, error } = validateBody(categoryCreateSchema, await req.json())
+  if (error) return error
+
   const data = await prisma.categories.create({ data: body })
   return NextResponse.json({ data })
 })

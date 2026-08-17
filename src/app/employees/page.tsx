@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { Plus, Search, Users, Eye, UserCheck, UserX } from 'lucide-react';
 import { getEmployees, updateEmployee, getLoans } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
+import { useToast } from '@/components/ui/Toast';
 import type { Employee } from '@/types';
 
 export default function EmployeesPage() {
   const router = useRouter();
   const { loading: adminLoading, isAdmin } = useRequireAdmin();
+  const toast = useToast();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [activeLoans, setActiveLoans] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export default function EmployeesPage() {
       const updated = await updateEmployee(emp.id, { is_active: !emp.is_active });
       setEmployees(prev => prev.map(e => e.id === emp.id ? updated : e));
     } catch (e) {
-      alert('Erreur : ' + (e instanceof Error ? e.message : String(e)));
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setToggling(null);
     }

@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, UserCog, Trash2, X, ShieldCheck } from 'lucide-react';
+import { Plus, UserCog, Trash2, X, ShieldCheck, KeyRound } from 'lucide-react';
 import { useAuth, useRequireAdmin } from '@/lib/auth-context';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import PasswordModal from '@/components/ui/PasswordModal';
+import { useToast } from '@/components/ui/Toast';
 
 interface AdminUser {
   id: string;
@@ -16,6 +18,7 @@ interface AdminUser {
 export default function UsersPage() {
   const { loading: authLoading, isAdmin } = useRequireAdmin();
   const { user: currentUser } = useAuth();
+  const toast = useToast();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +31,9 @@ export default function UsersPage() {
 
   const [toDelete, setToDelete] = useState<AdminUser | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [resetTarget, setResetTarget] = useState<AdminUser | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -67,6 +73,26 @@ export default function UsersPage() {
       setFormError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleResetPassword = async ({ newPassword }: { currentPassword: string; newPassword: string }) => {
+    if (!resetTarget) return;
+    setResetting(true);
+    try {
+      const res = await fetch(`/api/admin/users/${resetTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de la réinitialisation');
+      setResetTarget(null);
+      toast.success(`Mot de passe réinitialisé pour ${resetTarget.full_name || resetTarget.email}.`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -205,14 +231,25 @@ export default function UsersPage() {
                         )}
                       </td>
                       <td>
-                        <button
-                          onClick={() => setToDelete(u)}
-                          disabled={u.id === currentUser?.id}
-                          className="btn btn-ghost btn-sm btn-icon"
-                          title={u.id === currentUser?.id ? 'Impossible de supprimer votre propre compte' : 'Supprimer'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" style={{ color: u.id === currentUser?.id ? 'var(--et-text-muted)' : 'var(--et-danger)' }} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setResetTarget(u)}
+                            className="btn btn-ghost btn-sm btn-icon"
+                            title="Réinitialiser le mot de passe"
+                            aria-label={`Réinitialiser le mot de passe de ${u.full_name || u.email}`}
+                          >
+                            <KeyRound className="w-3.5 h-3.5" style={{ color: 'var(--et-text-muted)' }} />
+                          </button>
+                          <button
+                            onClick={() => setToDelete(u)}
+                            disabled={u.id === currentUser?.id}
+                            className="btn btn-ghost btn-sm btn-icon"
+                            title={u.id === currentUser?.id ? 'Impossible de supprimer votre propre compte' : 'Supprimer'}
+                            aria-label={u.id === currentUser?.id ? 'Impossible de supprimer votre propre compte' : `Supprimer ${u.full_name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" style={{ color: u.id === currentUser?.id ? 'var(--et-text-muted)' : 'var(--et-danger)' }} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -231,6 +268,15 @@ export default function UsersPage() {
         variant="danger"
         onConfirm={handleDelete}
         onCancel={() => setToDelete(null)}
+      />
+
+      <PasswordModal
+        open={!!resetTarget}
+        title="Réinitialiser le mot de passe"
+        description={`Définissez un nouveau mot de passe pour ${resetTarget?.full_name || resetTarget?.email}.`}
+        submitting={resetting}
+        onSubmit={handleResetPassword}
+        onCancel={() => setResetTarget(null)}
       />
     </div>
   );

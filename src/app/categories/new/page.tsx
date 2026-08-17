@@ -92,8 +92,9 @@ export default function NewCategoryPage() {
             <hr className="divider" />
 
             <div>
-              <label className="et-label">Nom <span style={{ color: 'var(--et-danger)' }}>*</span></label>
+              <label htmlFor="cat-name" className="et-label">Nom <span style={{ color: 'var(--et-danger)' }}>*</span></label>
               <input
+                id="cat-name"
                 type="text"
                 className="et-input"
                 placeholder="Ex: Vélos, Ordinateurs, Outillage…"
@@ -105,11 +106,12 @@ export default function NewCategoryPage() {
             </div>
 
             <div>
-              <label className="et-label">
+              <label htmlFor="cat-code" className="et-label">
                 Code <span style={{ color: 'var(--et-danger)' }}>*</span>
                 <span style={{ color: 'var(--et-text-muted)', fontWeight: 400, marginLeft: '0.5rem' }}>(max. 5 caractères, ex: VEL)</span>
               </label>
               <input
+                id="cat-code"
                 type="text"
                 className="et-input"
                 placeholder="Ex: VEL"
@@ -123,8 +125,9 @@ export default function NewCategoryPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="et-label">Icône (emoji)</label>
+                <label htmlFor="cat-icon" className="et-label">Icône (emoji)</label>
                 <input
+                  id="cat-icon"
                   type="text"
                   className="et-input"
                   placeholder="📦"
@@ -135,9 +138,10 @@ export default function NewCategoryPage() {
                 <p className="text-xs mt-1" style={{ color: 'var(--et-text-muted)' }}>Tapez ou collez un emoji</p>
               </div>
               <div>
-                <label className="et-label">Couleur</label>
+                <label htmlFor="cat-color" className="et-label">Couleur</label>
                 <div className="flex items-center gap-3">
                   <input
+                    id="cat-color"
                     type="color"
                     value={form.color}
                     onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
@@ -150,8 +154,9 @@ export default function NewCategoryPage() {
             </div>
 
             <div>
-              <label className="et-label">Description <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>
+              <label htmlFor="cat-description" className="et-label">Description <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>
               <textarea
+                id="cat-description"
                 className="et-textarea"
                 placeholder="Description de la catégorie…"
                 value={form.description}

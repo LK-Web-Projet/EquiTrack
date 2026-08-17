@@ -3,7 +3,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/auth/jwt'
 import { SESSION_COOKIE } from '@/lib/auth/session'
-import type { User } from '@prisma/client'
+import { Prisma, type User } from '@prisma/client'
+
+// Traduit les erreurs Prisma courantes en réponses HTTP propres, pour ne pas
+// laisser fuiter un 500 brut (ou un message d'erreur interne) au client
+// quand un id est introuvable ou qu'une contrainte unique est violée.
+function toErrorResponse(err: unknown): NextResponse {
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === 'P2025') {
+      return NextResponse.json({ error: 'Ressource introuvable' }, { status: 404 })
+    }
+    if (err.code === 'P2002') {
+      return NextResponse.json({ error: 'Cette valeur existe déjà' }, { status: 409 })
+    }
+    if (err.code === 'P2003') {
+      return NextResponse.json({ error: 'Référence invalide ou encore utilisée' }, { status: 409 })
+    }
+  }
+  console.error(err)
+  return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
+}
 
 export type SessionUser = Omit<User, 'password_hash'>
 
@@ -34,7 +53,11 @@ export function withAuth<P = Record<string, string>>(handler: AuthedHandler<P>) 
     if (!user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
-    return handler(req, { ...ctx, user })
+    try {
+      return await handler(req, { ...ctx, user })
+    } catch (err) {
+      return toErrorResponse(err)
+    }
   }
 }
 

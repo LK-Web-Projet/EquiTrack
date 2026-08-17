@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Zap, LogIn, Package, ArrowLeftRight, ScanLine, ShieldCheck } from 'lucide-react';
 
@@ -12,6 +12,14 @@ const HIGHLIGHTS = [
 ];
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -29,7 +37,8 @@ export default function LoginPage() {
       body: JSON.stringify({ email: email.trim(), password }),
     });
     if (!res.ok) {
-      setError('Email ou mot de passe incorrect.');
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || 'Email ou mot de passe incorrect.');
       setLoading(false);
       return;
     }
@@ -116,8 +125,9 @@ export default function LoginPage() {
             {error && <div className="alert alert-danger">{error}</div>}
 
             <div>
-              <label className="et-label">Email</label>
+              <label htmlFor="login-email" className="et-label">Email</label>
               <input
+                id="login-email"
                 type="email"
                 className="et-input"
                 placeholder="vous@entreprise.com"
@@ -129,8 +139,9 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="et-label">Mot de passe</label>
+              <label htmlFor="login-password" className="et-label">Mot de passe</label>
               <input
+                id="login-password"
                 type="password"
                 className="et-input"
                 placeholder="••••••••"

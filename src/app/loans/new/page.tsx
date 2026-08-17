@@ -7,7 +7,6 @@ import { ArrowLeft, ArrowRight, Check, Search, Plus, X, User, Package } from 'lu
 import { getEmployees, getCategories, getEquipment, createLoan } from '@/lib/api';
 import type { Employee, Category, Equipment } from '@/types';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 interface SelectedItem {
   equipment: Equipment;
@@ -113,7 +112,7 @@ export default function NewLoanPage() {
   return (
     <div className="fade-in">
       <div className="page-header flex items-center gap-3">
-        <Link href="/loans" className="btn btn-ghost btn-icon">
+        <Link href="/loans" className="btn btn-ghost btn-icon" aria-label="Retour aux emprunts">
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>
@@ -160,7 +159,7 @@ export default function NewLoanPage() {
             {/* ─── Step 1: Employee ─── */}
             {step === 1 && (
               <div className="card p-5 space-y-4">
-                <p className="section-label">Sélectionner l'employé</p>
+                <p className="section-label">Sélectionner l&apos;employé</p>
                 <div className="flex items-center gap-2" style={{ background: 'var(--et-surface-2)', border: '1.5px solid var(--et-border)', borderRadius: 'var(--et-radius)', padding: '0.5rem 0.875rem' }}>
                   <Search className="w-4 h-4 shrink-0" style={{ color: 'var(--et-text-muted)' }} />
                   <input
@@ -307,13 +306,13 @@ export default function NewLoanPage() {
             {/* ─── Step 3: Confirm ─── */}
             {step === 3 && (
               <div className="card p-5 space-y-5">
-                <p className="section-label">Confirmer l'emprunt</p>
+                <p className="section-label">Confirmer l&apos;emprunt</p>
 
                 {error && <div className="alert alert-danger">{error}</div>}
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="et-label">Date d'emprunt</label>
+                    <label className="et-label">Date d&apos;emprunt</label>
                     <input type="date" className="et-input" value={checkoutDate} readOnly style={{ opacity: 0.7 }} />
                   </div>
                   <div>
@@ -405,6 +404,7 @@ export default function NewLoanPage() {
                       <button
                         onClick={() => removeItem(eq.id)}
                         className="ml-auto btn btn-ghost btn-sm btn-icon"
+                        aria-label={`Retirer ${eq.category?.code}-${eq.display_number} de la sélection`}
                       >
                         <X className="w-3 h-3" style={{ color: 'var(--et-danger)' }} />
                       </button>

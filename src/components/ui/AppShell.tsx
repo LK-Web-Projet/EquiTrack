@@ -6,11 +6,14 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Package, ArrowLeftRight, History,
   Users, FileBarChart2, Settings, Layers, Building2,
-  Zap, MoreHorizontal, X, ScanLine, UserCog, LogOut, ChevronDown
+  Zap, MoreHorizontal, X, ScanLine, UserCog, LogOut, ChevronDown, KeyRound
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import ConfirmModal from './ConfirmModal';
+import PasswordModal from './PasswordModal';
 import { useAuth } from '@/lib/auth-context';
+import { changePassword } from '@/lib/api';
+import { useToast } from './Toast';
 
 const NAV_ITEMS = [
   { href: '/',            icon: LayoutDashboard, label: 'Tableau de bord', adminOnly: false },
@@ -39,14 +42,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { user, profile, isAdmin, signOut } = useAuth();
+  const toast = useToast();
 
   const handleLogout = () => {
     setConfirmLogout(false);
     setMenuOpen(false);
     setUserMenuOpen(false);
     signOut();
+  };
+
+  const handleChangePassword = async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) => {
+    setChangingPassword(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setShowPasswordModal(false);
+      toast.success('Mot de passe mis à jour.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   useEffect(() => {
@@ -110,28 +129,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all"
-                style={{
-                  background: active ? 'var(--et-sidebar-active-bg)' : 'transparent',
-                  color: active ? 'var(--et-sidebar-active)' : 'var(--et-sidebar-text)',
-                }}
-                onMouseEnter={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.background = 'var(--et-sidebar-hover)';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--et-sidebar-text-hover)';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--et-sidebar-text)';
-                  }
-                }}
+                className={`et-nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg${active ? ' active' : ''}`}
               >
                 <Icon
                   className="w-4 h-4 shrink-0"
                   strokeWidth={active ? 2.5 : 2}
-                  style={{ color: active ? 'var(--et-sidebar-active)' : 'var(--et-sidebar-text)' }}
+                  style={{ color: 'currentColor' }}
                 />
                 <span className="text-sm" style={{ fontWeight: active ? 600 : 400 }}>
                   {label}
@@ -193,11 +196,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <p className="text-xs mt-0.5" style={{ color: 'var(--et-text-muted)' }}>{isAdmin ? 'Administrateur' : 'Utilisateur'}</p>
                   </div>
                   <button
+                    onClick={() => { setUserMenuOpen(false); setShowPasswordModal(true); }}
+                    className="et-menu-item w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left"
+                    style={{ color: 'var(--et-text)' }}
+                  >
+                    <KeyRound className="w-4 h-4" style={{ color: 'var(--et-text-muted)' }} /> Changer le mot de passe
+                  </button>
+                  <button
                     onClick={() => { setUserMenuOpen(false); setConfirmLogout(true); }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors"
+                    className="et-danger-action w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left"
                     style={{ color: 'var(--et-danger)' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--et-danger-bg)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
                     <LogOut className="w-4 h-4" /> Se déconnecter
                   </button>
@@ -361,6 +369,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         variant="warning"
         onConfirm={handleLogout}
         onCancel={() => setConfirmLogout(false)}
+      />
+
+      <PasswordModal
+        open={showPasswordModal}
+        title="Changer le mot de passe"
+        description="Choisissez un nouveau mot de passe pour votre compte."
+        requireCurrent
+        submitting={changingPassword}
+        onSubmit={handleChangePassword}
+        onCancel={() => setShowPasswordModal(false)}
       />
     </div>
   );

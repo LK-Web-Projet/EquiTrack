@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth, withAdmin } from '@/lib/api-auth'
 import { shapeEquipment, parseDateOnly } from '@/lib/api-shape'
+import { equipmentCreateSchema, validateBody } from '@/lib/validation'
 
 export const GET = withAuth(async (req: NextRequest) => {
   const url = new URL(req.url)
@@ -17,7 +18,9 @@ export const GET = withAuth(async (req: NextRequest) => {
 })
 
 export const POST = withAdmin(async (req: NextRequest) => {
-  const body = await req.json()
+  const { data: body, error } = validateBody(equipmentCreateSchema, await req.json())
+  if (error) return error
+
   const equipment = await prisma.equipment.create({
     data: { ...body, acquisition_date: parseDateOnly(body.acquisition_date) ?? null },
     include: { categories: true },

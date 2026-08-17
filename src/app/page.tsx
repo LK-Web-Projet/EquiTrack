@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Package, ArrowLeftRight, CheckCircle2, AlertCircle,
-  Wrench, Plus, Clock, ArrowRight, Layers, Users
+  Wrench, Plus, Clock, ArrowRight, Layers, Users, AlertTriangle
 } from 'lucide-react';
 import { getDashboardStats, getLoans, getCategories, getEquipment, getRecentIncidents } from '@/lib/api';
 import type { DashboardStats, Loan, Category } from '@/types';
@@ -82,6 +82,7 @@ export default function DashboardPage() {
     { label: 'En panne', value: stats?.broken ?? 0, icon: AlertCircle, color: 'var(--et-danger)', bg: 'var(--et-danger-bg)', href: '/equipment?status=broken' },
     { label: 'Maintenance', value: stats?.maintenance ?? 0, icon: Wrench, color: 'var(--et-warning)', bg: 'var(--et-warning-bg)', href: '/equipment?status=maintenance' },
     { label: 'Emprunts actifs', value: stats?.active_loans ?? 0, icon: Clock, color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', href: '/loans' },
+    { label: 'Emprunts en retard', value: stats?.overdue_loans ?? 0, icon: AlertTriangle, color: 'var(--et-danger)', bg: 'var(--et-danger-bg)', href: '/loans' },
   ];
 
   return (

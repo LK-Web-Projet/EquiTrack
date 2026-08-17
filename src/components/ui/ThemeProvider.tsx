@@ -1,29 +1,22 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 interface ThemeContextType { theme: Theme; toggleTheme: () => void; }
 
 const ThemeContext = createContext<ThemeContextType>({ theme: 'light', toggleTheme: () => {} });
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
-  const [mounted, setMounted] = useState(false);
+function getInitialTheme(): Theme {
+  if (typeof document === 'undefined') return 'light';
+  return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+}
 
-  useEffect(() => {
-    const stored = localStorage.getItem('et-theme') as Theme | null;
-    if (stored) {
-      setTheme(stored);
-      document.documentElement.classList.toggle('dark', stored === 'dark');
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initial: Theme = prefersDark ? 'dark' : 'light';
-      setTheme(initial);
-      document.documentElement.classList.toggle('dark', prefersDark);
-    }
-    setMounted(true);
-  }, []);
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // La classe .dark est déjà posée avant l'hydratation par le script inline
+  // dans layout.tsx (voir THEME_INIT_SCRIPT) — pas besoin d'attendre un effet
+  // pour l'appliquer, ce qui évite un flash de page blanche à chaque navigation.
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   const toggleTheme = () => {
     const next: Theme = theme === 'light' ? 'dark' : 'light';
@@ -31,8 +24,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('et-theme', next);
     document.documentElement.classList.toggle('dark', next === 'dark');
   };
-
-  if (!mounted) return null;
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

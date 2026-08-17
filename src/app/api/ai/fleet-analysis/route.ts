@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { withAuth } from '@/lib/api-auth'
+import { AI_FEATURES_ENABLED } from '@/lib/config'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -8,7 +10,11 @@ Tu analyses les données de la flotte et fournis des insights actionnables en fr
 Sois concis, précis et orienté action. Utilise des emojis pour rendre la lecture agréable.
 Format de réponse : JSON structuré uniquement, sans texte supplémentaire.`
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (req: NextRequest) => {
+  if (!AI_FEATURES_ENABLED) {
+    return NextResponse.json({ success: false, error: 'Fonctionnalité IA désactivée' }, { status: 404 })
+  }
+
   try {
     const data = await req.json()
     const { stats, categories, recentLoans, recentIncidents } = data
@@ -83,4 +89,4 @@ Analyse cette flotte et retourne UNIQUEMENT ce JSON (sans markdown, sans code bl
       { status: 500 }
     )
   }
-}
+})

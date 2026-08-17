@@ -5,10 +5,12 @@ import { Plus, Pencil, Trash2, Check, X, Building2 } from 'lucide-react';
 import { getDepartments, createDepartment, updateDepartment, deleteDepartment, getEmployees } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useToast } from '@/components/ui/Toast';
 import type { Department } from '@/types';
 
 export default function DepartmentsPage() {
   const { loading: adminLoading, isAdmin } = useRequireAdmin();
+  const toast = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [empCounts, setEmpCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -69,7 +71,7 @@ export default function DepartmentsPage() {
       setDepartments(prev => prev.map(d => d.id === id ? updated : d));
       setEditId(null);
     } catch (e: unknown) {
-      alert('Erreur : ' + (e instanceof Error ? e.message : String(e)));
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setSaving(false);
     }

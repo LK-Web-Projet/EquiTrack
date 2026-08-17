@@ -100,7 +100,7 @@ export default function SettingsPage() {
             <div className="p-4 rounded-xl" style={{ background: 'var(--et-surface-2)' }}>
               <p className="text-xs" style={{ color: 'var(--et-text-muted)' }}>Application</p>
               <p className="font-semibold mt-1" style={{ color: 'var(--et-text)' }}>EquiTrack</p>
-              <p className="text-sm" style={{ color: 'var(--et-text-muted)' }}>Gestion des emprunts d'équipements</p>
+              <p className="text-sm" style={{ color: 'var(--et-text-muted)' }}>Gestion des emprunts d&apos;équipements</p>
             </div>
             <div className="p-4 rounded-xl" style={{ background: 'var(--et-surface-2)' }}>
               <p className="text-xs" style={{ color: 'var(--et-text-muted)' }}>Version</p>
@@ -219,7 +219,7 @@ export default function SettingsPage() {
     <div className="fade-in">
       <div className="page-header">
         <h1 className="page-title">Paramètres</h1>
-        <p className="page-subtitle">Configuration et gestion de l'application</p>
+        <p className="page-subtitle">Configuration et gestion de l&apos;application</p>
       </div>
 
       <div className="px-4 md:px-7 pb-8 space-y-5 max-w-4xl mx-auto">

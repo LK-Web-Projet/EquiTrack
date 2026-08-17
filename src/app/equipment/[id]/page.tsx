@@ -21,6 +21,7 @@ import CameraCapture from '@/components/ui/CameraCapture';
 import ImageModal from '@/components/ui/ImageModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/components/ui/Toast';
 import { AI_FEATURES_ENABLED } from '@/lib/config';
 import type { Equipment, EquipmentStatus } from '@/types';
 import { format } from 'date-fns';
@@ -47,6 +48,7 @@ export default function EquipmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const toast = useToast();
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [history, setHistory] = useState<LoanHistoryRow[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -121,7 +123,7 @@ export default function EquipmentDetailPage() {
     try {
       const updated = await updateEquipment(id, { status: newStatus });
       setEquipment(updated);
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
     finally { setChangingStatus(false); }
   };
 
@@ -132,7 +134,7 @@ export default function EquipmentDetailPage() {
     try {
       await deleteEquipment(id);
       router.push(`/categories/${equipment.category_id}`);
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); setDeleting(false); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); setDeleting(false); }
   };
 
   // ── Photos ──
@@ -141,7 +143,7 @@ export default function EquipmentDetailPage() {
     try {
       const photo = await uploadEquipmentPhoto(id, dataUrl);
       setPhotos(prev => [...prev, photo]);
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
     finally { setUploadingPhoto(false); }
   };
 
@@ -161,7 +163,7 @@ export default function EquipmentDetailPage() {
     try {
       await deleteEquipmentPhoto(photo);
       setPhotos(prev => prev.filter(p => p.id !== photo.id));
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
   };
 
   // ── Incidents ──
@@ -179,7 +181,7 @@ export default function EquipmentDetailPage() {
       setIncidents(prev => [inc, ...prev]);
       setIncForm({ description: '', reported_by: '', reported_at: format(new Date(), 'yyyy-MM-dd\'T\'HH:mm') });
       setShowIncidentForm(false);
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
     finally { setSavingInc(false); }
   };
 
@@ -212,7 +214,7 @@ export default function EquipmentDetailPage() {
     try {
       const updated = await resolveIncident(incId);
       setIncidents(prev => prev.map(i => i.id === incId ? updated : i));
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
   };
 
   const handleDeleteIncident = async () => {
@@ -222,7 +224,7 @@ export default function EquipmentDetailPage() {
     try {
       await deleteIncident(incId);
       setIncidents(prev => prev.filter(i => i.id !== incId));
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
   };
 
   // ── Maintenances ──
@@ -241,7 +243,7 @@ export default function EquipmentDetailPage() {
       setMaintenances(prev => [m, ...prev]);
       setMaintForm({ description: '', performed_by: '', performed_at: format(new Date(), 'yyyy-MM-dd'), cost: '' });
       setShowMaintenanceForm(false);
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
     finally { setSavingMaint(false); }
   };
 
@@ -252,7 +254,7 @@ export default function EquipmentDetailPage() {
     try {
       await deleteMaintenance(mId);
       setMaintenances(prev => prev.filter(m => m.id !== mId));
-    } catch (e) { alert('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
+    } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
   };
 
   if (loading) return <div className="flex items-center justify-center" style={{ minHeight: '60vh' }}><div className="spinner" style={{ width: '2rem', height: '2rem' }} /></div>;

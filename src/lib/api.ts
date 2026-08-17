@@ -98,6 +98,16 @@ export const returnLoan = (
 ): Promise<Loan> =>
   apiFetch(`/api/loans/${loanId}/return`, { method: 'POST', body: JSON.stringify(returnData) })
 
+// ─── Compte / mot de passe ──────────────────────────────────────
+export const changePassword = (current_password: string, new_password: string): Promise<void> =>
+  apiFetch('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password, new_password }),
+  })
+
+export const resetUserPassword = (userId: string, password: string): Promise<void> =>
+  apiFetch(`/api/admin/users/${userId}`, { method: 'PATCH', body: JSON.stringify({ password }) })
+
 // ─── Dashboard Stats ──────────────────────────────────────────
 export const getDashboardStats = (): Promise<{
   total: number
@@ -106,6 +116,7 @@ export const getDashboardStats = (): Promise<{
   broken: number
   maintenance: number
   active_loans: number
+  overdue_loans: number
 }> => apiFetch('/api/dashboard/stats')
 
 // ─── Incidents ────────────────────────────────────────────────

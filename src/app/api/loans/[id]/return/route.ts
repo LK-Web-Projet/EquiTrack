@@ -2,26 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/api-auth'
 import { shapeLoan, parseDateOnly, parseTimeOnly } from '@/lib/api-shape'
+import { loanReturnSchema, validateBody } from '@/lib/validation'
 
 const LOAN_INCLUDE = {
   employees: { include: { departments: true } },
   loan_items: { include: { equipment: { include: { categories: true } } } },
 } as const
 
-interface ReturnItem {
-  equipment_id: string
-  return_condition: 'good' | 'broken' | 'damaged'
-  return_notes?: string
-}
-
 export const POST = withAuth<{ id: string }>(async (req: NextRequest, { params }) => {
   const { id } = await params
-  const { return_date, return_time, return_notes, items } = await req.json() as {
-    return_date: string
-    return_time: string
-    return_notes?: string
-    items: ReturnItem[]
-  }
+  const { data: body, error } = validateBody(loanReturnSchema, await req.json())
+  if (error) return error
+  const { return_date, return_time, return_notes, items } = body
 
   await prisma.$transaction(async (tx) => {
     await tx.loans.update({

@@ -10,6 +10,7 @@ import {
 import { getCategories, getEquipment, updateEquipment, deleteEquipment } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useToast } from '@/components/ui/Toast';
 import type { Category, Equipment, EquipmentStatus, EquipmentCondition } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -42,6 +43,7 @@ export default function CategoryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { loading: adminLoading, isAdmin } = useRequireAdmin();
   const router = useRouter();
+  const toast = useToast();
 
   const [category, setCategory] = useState<Category | null>(null);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -128,7 +130,7 @@ export default function CategoryDetailPage() {
       const updated = await updateEquipment(eq.id, { status });
       setEquipment(prev => prev.map(e => e.id === updated.id ? updated : e));
     } catch (e) {
-      alert('Erreur : ' + (e instanceof Error ? e.message : String(e)));
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)));
     }
   };
 

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Search, Package, Eye, RefreshCw } from 'lucide-react';
 import { getEquipment, getCategories, updateEquipment } from '@/lib/api';
+import { useToast } from '@/components/ui/Toast';
 import type { Equipment, Category, EquipmentStatus } from '@/types';
 
 const STATUS_LABELS: Record<EquipmentStatus, string> = {
@@ -25,8 +26,17 @@ const CONDITION_LABELS = { good: 'Bon état', fair: 'Correct', poor: 'Mauvais é
 const CONDITION_BADGE = { good: 'badge badge-good', fair: 'badge badge-fair', poor: 'badge badge-poor' };
 
 export default function EquipmentPage() {
+  return (
+    <Suspense fallback={null}>
+      <EquipmentPageContent />
+    </Suspense>
+  );
+}
+
+function EquipmentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const toast = useToast();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +78,7 @@ export default function EquipmentPage() {
       const updated = await updateEquipment(eq.id, { status: newStatus });
       setEquipment(prev => prev.map(e => e.id === eq.id ? updated : e));
     } catch (e) {
-      alert('Erreur : ' + (e instanceof Error ? e.message : String(e)));
+      toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setChangingStatus(null);
     }

@@ -89,4 +89,5 @@ export interface DashboardStats {
   broken: number
   maintenance: number
   active_loans: number
+  overdue_loans: number
 }

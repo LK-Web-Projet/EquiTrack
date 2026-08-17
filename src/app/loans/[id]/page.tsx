@@ -127,7 +127,7 @@ export default function LoanDetailPage() {
       {/* ── Header ── */}
       <div className="page-header flex items-start justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/loans')} className="btn btn-ghost btn-icon">
+          <button onClick={() => router.push('/loans')} className="btn btn-ghost btn-icon" aria-label="Retour aux emprunts">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>

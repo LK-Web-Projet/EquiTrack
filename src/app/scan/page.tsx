@@ -104,7 +104,7 @@ export default function ScanPage() {
   return (
     <div className="fade-in">
       <div className="page-header flex items-center gap-3">
-        <Link href="/" className="btn btn-ghost btn-icon">
+        <Link href="/" className="btn btn-ghost btn-icon" aria-label="Retour au tableau de bord">
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>
