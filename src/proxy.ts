@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE } from '@/lib/auth/session'
 
-const PUBLIC_PATHS = ['/login']
+const PUBLIC_PATHS = ['/login', '/setup']
 
 export function proxy(request: NextRequest) {
   // Les routes API font leur propre vérification (withAuth/withAdmin) et

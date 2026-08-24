@@ -77,8 +77,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('mousedown', handleClick);
   }, [userMenuOpen]);
 
-  // Page de connexion : pas de sidebar / nav, juste le formulaire.
-  if (pathname === '/login') {
+  // Page de connexion / setup initial : pas de sidebar / nav, juste le formulaire.
+  if (pathname === '/login' || pathname === '/setup') {
     return <>{children}</>;
   }
 

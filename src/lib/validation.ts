@@ -100,6 +100,15 @@ export const loanReturnSchema = z.object({
   }).strict()).min(1, 'Aucun équipement à retourner'),
 }).strict()
 
+// ─── Setup initial : création du tout premier compte admin ─────
+// Pas de champ "role" : ce endpoint crée toujours un admin, et seulement
+// si la table users est vide (cf. src/app/api/setup/route.ts).
+export const setupAdminSchema = z.object({
+  email: z.string().trim().toLowerCase().email('Email invalide'),
+  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+  full_name: z.string().trim().max(150).optional(),
+}).strict()
+
 // ─── Admin: création d'utilisateur ─────────────────────────────
 export const userCreateSchema = z.object({
   email: z.string().trim().toLowerCase().email('Email invalide'),
