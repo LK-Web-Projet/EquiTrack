@@ -131,7 +131,7 @@ export default function ScanPage() {
             {state === 'idle' && (
               <div className="flex flex-col items-center gap-4 py-10 px-6 text-center">
                 <div className="flex items-center justify-center w-20 h-20 rounded-full"
-                  style={{ background: 'rgba(59,130,246,0.15)' }}>
+                  style={{ background: 'rgba(239,68,68,0.15)' }}>
                   <Camera className="w-10 h-10" style={{ color: 'var(--et-primary)' }} />
                 </div>
                 <div>

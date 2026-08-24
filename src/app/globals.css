@@ -3,16 +3,16 @@
 
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS — EquiTrack
-   Palette : Blue 500 primary · Slate sidebar
+   Palette : Red 500 primary · Noir/blanc
    ═══════════════════════════════════════════════════ */
 
 :root {
   /* ── Brand ── */
-  --et-primary:           #3b82f6;
-  --et-primary-hover:     #2563eb;
-  --et-primary-light:     #eff6ff;
-  --et-primary-muted:     #dbeafe;
-  --et-primary-text:      #1d4ed8;
+  --et-primary:           #ef4444;
+  --et-primary-hover:     #dc2626;
+  --et-primary-light:     #fef2f2;
+  --et-primary-muted:     #fee2e2;
+  --et-primary-text:      #b91c1c;
 
   /* ── Status colors ── */
   --et-success:           #10b981;
@@ -31,15 +31,15 @@
   --et-info-bg:           #f5f3ff;
   --et-info-text:         #4c1d95;
 
-  /* ── Sidebar (always dark) ── */
-  --et-sidebar-bg:        #0f172a;
-  --et-sidebar-border:    #1e293b;
-  --et-sidebar-text:      #94a3b8;
-  --et-sidebar-text-hover:#cbd5e1;
-  --et-sidebar-active-bg: rgba(59,130,246,0.12);
-  --et-sidebar-active:    #3b82f6;
-  --et-sidebar-hover:     rgba(255,255,255,0.04);
-  --et-sidebar-logo:      #f1f5f9;
+  /* ── Sidebar (always dark — noir secondaire) ── */
+  --et-sidebar-bg:        #000000;
+  --et-sidebar-border:    #1a1a1a;
+  --et-sidebar-text:      #a3a3a3;
+  --et-sidebar-text-hover:#e5e5e5;
+  --et-sidebar-active-bg: rgba(239,68,68,0.14);
+  --et-sidebar-active:    #ef4444;
+  --et-sidebar-hover:     rgba(255,255,255,0.05);
+  --et-sidebar-logo:      #ffffff;
 
   /* ── Surface — Light ── */
   --et-bg:                #f8fafc;
@@ -69,9 +69,9 @@
 
 /* ── Dark mode ── */
 .dark {
-  --et-primary-light:     rgba(59,130,246,0.12);
-  --et-primary-muted:     rgba(59,130,246,0.2);
-  --et-primary-text:      #93c5fd;
+  --et-primary-light:     rgba(239,68,68,0.12);
+  --et-primary-muted:     rgba(239,68,68,0.2);
+  --et-primary-text:      #fca5a5;
 
   --et-success-bg:        rgba(16,185,129,0.1);
   --et-success-text:      #6ee7b7;
@@ -193,7 +193,7 @@
 .et-input::placeholder { color: var(--et-text-muted); }
 .et-input:focus {
   border-color: var(--et-primary);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
 }
 
 /* ── Select ── */
@@ -212,7 +212,7 @@
 }
 .et-select:focus {
   border-color: var(--et-primary);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
 }
 
 /* ── Label ── */
@@ -241,7 +241,7 @@
 }
 .et-textarea:focus {
   border-color: var(--et-primary);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
 }
 
 /* ── Buttons ── */
@@ -265,18 +265,20 @@
   background: var(--et-primary);
   color: #fff;
 }
-.btn-primary:hover:not(:disabled) { background: var(--et-primary-hover); box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
+.btn-primary:hover:not(:disabled) { background: var(--et-primary-hover); box-shadow: 0 4px 12px rgba(239,68,68,0.35); }
 .btn-secondary {
   background: var(--et-surface);
   color: var(--et-text-secondary);
   border: 1.5px solid var(--et-border);
 }
 .btn-secondary:hover:not(:disabled) { background: var(--et-surface-2); color: var(--et-text); }
+/* Rouge plus sombre que --et-primary : distingue "supprimer" des actions
+   principales maintenant que la marque utilise elle aussi du rouge. */
 .btn-danger {
-  background: var(--et-danger);
+  background: #b91c1c;
   color: #fff;
 }
-.btn-danger:hover:not(:disabled) { background: #dc2626; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+.btn-danger:hover:not(:disabled) { background: #991b1b; box-shadow: 0 4px 12px rgba(185,28,28,0.35); }
 .btn-ghost {
   background: transparent;
   color: var(--et-text-muted);
@@ -301,13 +303,13 @@
   white-space: nowrap;
 }
 .badge-available { background: var(--et-success-bg); color: var(--et-success-text); }
-.badge-borrowed   { background: var(--et-primary-light); color: var(--et-primary-text); }
+.badge-borrowed   { background: var(--et-info-bg); color: var(--et-info-text); }
 .badge-broken     { background: var(--et-danger-bg); color: var(--et-danger-text); }
 .badge-maintenance{ background: var(--et-warning-bg); color: var(--et-warning-text); }
 .badge-good       { background: var(--et-success-bg); color: var(--et-success-text); }
 .badge-fair       { background: var(--et-warning-bg); color: var(--et-warning-text); }
 .badge-poor       { background: var(--et-danger-bg); color: var(--et-danger-text); }
-.badge-active     { background: var(--et-primary-light); color: var(--et-primary-text); }
+.badge-active     { background: var(--et-info-bg); color: var(--et-info-text); }
 .badge-returned   { background: var(--et-success-bg); color: var(--et-success-text); }
 .badge-neutral    { background: var(--et-surface-2); color: var(--et-text-secondary); }
 

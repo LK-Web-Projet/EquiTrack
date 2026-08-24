@@ -38,7 +38,7 @@ export function QRCodeCard({ equipment, baseUrl }: Props) {
             }
             .brand {
               font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-              color: #3b82f6; margin-bottom: 10px; text-transform: uppercase;
+              color: #ef4444; margin-bottom: 10px; text-transform: uppercase;
             }
             .qr { margin: 0 auto 10px; }
             .number {

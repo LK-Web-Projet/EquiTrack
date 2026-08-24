@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Package, ArrowLeftRight, History,
   Users, FileBarChart2, Settings, Layers, Building2,
-  Zap, MoreHorizontal, X, ScanLine, UserCog, LogOut, ChevronDown, KeyRound
+  MoreHorizontal, X, ScanLine, UserCog, LogOut, ChevronDown, KeyRound
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import ConfirmModal from './ConfirmModal';
@@ -14,6 +14,7 @@ import PasswordModal from './PasswordModal';
 import { useAuth } from '@/lib/auth-context';
 import { changePassword } from '@/lib/api';
 import { useToast } from './Toast';
+import pkg from '../../../package.json';
 
 const NAV_ITEMS = [
   { href: '/',            icon: LayoutDashboard, label: 'Tableau de bord', adminOnly: false },
@@ -105,12 +106,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-5" style={{ borderBottom: '1px solid var(--et-sidebar-border)' }}>
-          <div
-            className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
-            style={{ background: 'var(--et-primary)' }}
-          >
-            <Zap className="w-4 h-4 text-white" strokeWidth={2.5} />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logomet.svg" alt="EquiTrack" className="w-8 h-8 shrink-0" />
           <div>
             <p className="text-sm font-bold tracking-tight" style={{ color: 'var(--et-sidebar-logo)' }}>
               EquiTrack
@@ -155,7 +152,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           className="px-4 py-3"
           style={{ borderTop: '1px solid var(--et-sidebar-border)' }}
         >
-          <span className="text-[11px]" style={{ color: 'var(--et-sidebar-text)' }}>v1.0.0</span>
+          <span className="text-[11px]" style={{ color: 'var(--et-sidebar-text)' }}>v{pkg.version}</span>
         </div>
       </aside>
 
@@ -299,12 +296,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* Header du panneau */}
             <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--et-border)' }}>
               <div className="flex items-center gap-2">
-                <div
-                  className="flex items-center justify-center w-7 h-7 rounded-lg"
-                  style={{ background: 'var(--et-primary)' }}
-                >
-                  <Zap className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logomet.svg" alt="EquiTrack" className="w-7 h-7 shrink-0" />
                 <span className="font-bold text-sm" style={{ color: 'var(--et-text)' }}>EquiTrack</span>
               </div>
               <button
@@ -335,7 +328,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       className="flex items-center justify-center w-11 h-11 rounded-xl"
                       style={{
                         background: active ? 'var(--et-primary)' : 'var(--et-surface)',
-                        boxShadow: active ? '0 4px 12px rgba(59,130,246,0.3)' : 'none',
+                        boxShadow: active ? '0 4px 12px rgba(239,68,68,0.3)' : 'none',
                       }}
                     >
                       <Icon

@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Zap, LogIn, Package, ArrowLeftRight, ScanLine, ShieldCheck } from 'lucide-react';
+import { LogIn, Package, ArrowLeftRight, ScanLine, ShieldCheck } from 'lucide-react';
+import PasswordField from '@/components/ui/PasswordField';
 
 const HIGHLIGHTS = [
   { icon: Package,        label: 'Suivi complet du parc d’équipements' },
@@ -57,17 +58,16 @@ function LoginForm() {
         {/* Décor : cercles subtils */}
         <div
           className="absolute -top-24 -right-24 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.18) 0%, transparent 70%)' }}
         />
         <div
           className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.1) 0%, transparent 70%)' }}
         />
 
         <div className="relative flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0" style={{ background: 'var(--et-primary)' }}>
-            <Zap className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logomet.svg" alt="EquiTrack" className="w-9 h-9 shrink-0" />
           <span className="text-lg font-bold tracking-tight" style={{ color: 'var(--et-sidebar-logo)' }}>EquiTrack</span>
         </div>
 
@@ -84,7 +84,7 @@ function LoginForm() {
               <div key={label} className="flex items-center gap-3">
                 <div
                   className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
-                  style={{ background: 'rgba(59,130,246,0.12)' }}
+                  style={{ background: 'rgba(239,68,68,0.12)' }}
                 >
                   <Icon className="w-4 h-4" style={{ color: 'var(--et-primary)' }} strokeWidth={2.25} />
                 </div>
@@ -107,9 +107,8 @@ function LoginForm() {
         <div className="w-full max-w-sm">
           {/* Logo visible uniquement sur mobile/tablette */}
           <div className="flex lg:hidden flex-col items-center gap-3 mb-8">
-            <div className="flex items-center justify-center w-12 h-12 rounded-2xl" style={{ background: 'var(--et-primary)' }}>
-              <Zap className="w-6 h-6 text-white" strokeWidth={2.5} />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logomet.svg" alt="EquiTrack" className="w-12 h-12" />
             <div className="text-center">
               <p className="text-lg font-bold tracking-tight" style={{ color: 'var(--et-text)' }}>EquiTrack</p>
               <p className="text-sm" style={{ color: 'var(--et-text-muted)' }}>Gestion des équipements</p>
@@ -140,10 +139,8 @@ function LoginForm() {
 
             <div>
               <label htmlFor="login-password" className="et-label">Mot de passe</label>
-              <input
+              <PasswordField
                 id="login-password"
-                type="password"
-                className="et-input"
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}

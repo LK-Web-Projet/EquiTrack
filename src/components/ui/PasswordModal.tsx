@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { KeyRound, X } from 'lucide-react';
+import PasswordField from './PasswordField';
 
 interface PasswordModalProps {
   open: boolean;
@@ -91,11 +92,9 @@ export default function PasswordModal({
           {requireCurrent && (
             <div>
               <label htmlFor="pwd-current" className="et-label">Mot de passe actuel</label>
-              <input
+              <PasswordField
                 ref={firstFieldRef}
                 id="pwd-current"
-                type="password"
-                className="et-input"
                 value={currentPassword}
                 onChange={e => setCurrentPassword(e.target.value)}
                 autoComplete="current-password"
@@ -106,11 +105,9 @@ export default function PasswordModal({
 
           <div>
             <label htmlFor="pwd-new" className="et-label">Nouveau mot de passe</label>
-            <input
+            <PasswordField
               ref={!requireCurrent ? firstFieldRef : undefined}
               id="pwd-new"
-              type="password"
-              className="et-input"
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
               autoComplete="new-password"
@@ -121,10 +118,8 @@ export default function PasswordModal({
 
           <div>
             <label htmlFor="pwd-confirm" className="et-label">Confirmer le nouveau mot de passe</label>
-            <input
+            <PasswordField
               id="pwd-confirm"
-              type="password"
-              className="et-input"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
