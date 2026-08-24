@@ -120,3 +120,4 @@ SEED_ADMIN_NAME=
 ⚠️ **Sécurité** :
 - `DATABASE_URL`, `JWT_SECRET` et `ANTHROPIC_API_KEY` sont des secrets sensibles : ne jamais les committer.
 - En production, définir ces variables directement dans l'environnement du VPS (Docker/systemd/PM2), pas dans un fichier suivi par git.
+rebuild 1
