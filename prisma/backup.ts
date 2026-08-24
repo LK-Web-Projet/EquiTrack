@@ -8,7 +8,7 @@
 // (password_hash) sont volontairement exclus du JSON exporté.
 
 import { config as loadEnv } from 'dotenv'
-loadEnv({ path: '.env.local' })
+loadEnv({ path: '.env' })
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'

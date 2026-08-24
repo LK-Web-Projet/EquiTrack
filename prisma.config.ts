@@ -1,8 +1,8 @@
 // Config Prisma 7 — les URLs de connexion ne vont plus dans schema.prisma,
-// elles se lisent ici. On recharge .env.local (convention Next.js du projet)
+// elles se lisent ici. On recharge .env (convention Next.js du projet)
 // puisque Prisma ne le fait pas automatiquement (seul .env l'est par défaut).
 import { config as loadEnv } from 'dotenv'
-loadEnv({ path: '.env.local' })
+loadEnv({ path: '.env' })
 
 import { defineConfig } from 'prisma/config'
 

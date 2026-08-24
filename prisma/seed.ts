@@ -1,6 +1,6 @@
 // Seed : crée (ou met à jour) le tout premier compte admin.
 //
-// Nécessite dans .env.local :
+// Nécessite dans .env :
 //   SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_ADMIN_NAME (optionnel)
 //
 // Lancer avec : npm run db:seed  (ou automatiquement après `npm run db:migrate`)
@@ -9,7 +9,7 @@
 // s'il existe déjà (il remet juste son rôle à 'admin').
 
 import { config as loadEnv } from 'dotenv'
-loadEnv({ path: '.env.local' })
+loadEnv({ path: '.env' })
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
@@ -25,7 +25,7 @@ const adminName = process.env.SEED_ADMIN_NAME || 'Admin'
 async function main() {
   if (!adminEmail || !adminPassword) {
     throw new Error(
-      'SEED_ADMIN_EMAIL et SEED_ADMIN_PASSWORD sont requis dans .env.local pour créer le premier compte admin.'
+      'SEED_ADMIN_EMAIL et SEED_ADMIN_PASSWORD sont requis dans .env pour créer le premier compte admin.'
     )
   }
   if (adminPassword.length < 8) {

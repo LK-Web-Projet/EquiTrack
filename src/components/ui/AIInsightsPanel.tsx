@@ -126,7 +126,7 @@ export function AIInsightsPanel({ stats, categories, recentLoans, recentIncident
               {error === 'credits' &&
                 'Le solde du compte API Anthropic est épuisé. Rechargez des crédits sur console.anthropic.com → Plans & Billing.'}
               {error === 'apikey' &&
-                "La clé API n'est pas définie. Ajoutez ANTHROPIC_API_KEY dans votre fichier .env.local et redémarrez le serveur."}
+                "La clé API n'est pas définie. Ajoutez ANTHROPIC_API_KEY dans votre fichier .env et redémarrez le serveur."}
               {error === 'generic' &&
                 "L'analyse IA est momentanément indisponible. Vérifiez votre connexion et réessayez dans quelques instants."}
             </p>

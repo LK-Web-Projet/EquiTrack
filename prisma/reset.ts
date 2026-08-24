@@ -10,7 +10,7 @@
 // Un backup (npm run db:backup) est fortement recommandé avant.
 
 import { config as loadEnv } from 'dotenv'
-loadEnv({ path: '.env.local' })
+loadEnv({ path: '.env' })
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
