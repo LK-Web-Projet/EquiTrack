@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAdmin } from '@/lib/api-auth'
 import { parseDateOnly } from '@/lib/api-shape'
+import { settingsImportSchema, validateBody } from '@/lib/validation'
 
 export const POST = withAdmin(async (req: NextRequest) => {
   const body = await req.json()
-  const { categories, departments, employees, equipment } = body
+  const { data, error } = validateBody(settingsImportSchema, body)
+  if (error) return error
+  const { categories, departments, employees, equipment } = data
 
   let count = 0
 

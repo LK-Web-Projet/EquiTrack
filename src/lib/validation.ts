@@ -128,6 +128,61 @@ export const changePasswordSchema = z.object({
   new_password: z.string().min(8, 'Le nouveau mot de passe doit contenir au moins 8 caractères'),
 }).strict()
 
+// ─── Settings: import JSON (restauration d'un export /api/settings) ────
+// Les objets `department`/`category` sont les relations jointes renvoyées par
+// GET /api/employees et /api/equipment (cf. shapeEmployee/shapeEquipment) —
+// présentes dans un fichier exporté depuis l'app, retirées avant l'upsert.
+const importCategorySchema = z.object({
+  id: uuid,
+  name: z.string().trim().min(1).max(120),
+  code: z.string().trim().min(1).max(20),
+  icon: z.string().trim().min(1).max(8).optional(),
+  color: hexColor.optional(),
+  description: z.string().trim().max(2000).optional().nullable(),
+  created_at: z.coerce.date().optional().nullable(),
+})
+
+const importDepartmentSchema = z.object({
+  id: uuid,
+  name: z.string().trim().min(1).max(120),
+  color: hexColor.optional().nullable(),
+  description: z.string().trim().max(2000).optional().nullable(),
+  created_at: z.coerce.date().optional().nullable(),
+})
+
+const importEmployeeSchema = z.object({
+  id: uuid,
+  name: z.string().trim().min(1).max(150),
+  department_id: uuid.optional().nullable(),
+  phone: z.string().trim().max(40).optional().nullable(),
+  is_active: z.boolean().optional().nullable(),
+  created_at: z.coerce.date().optional().nullable(),
+  department: z.unknown().optional(),
+})
+
+const importEquipmentSchema = z.object({
+  id: uuid,
+  category_id: uuid,
+  sequential_number: z.number().int().positive(),
+  display_number: z.string().trim().min(1).max(30),
+  serial_number: z.string().trim().max(100).optional().nullable(),
+  status: equipmentStatusEnum,
+  condition: equipmentConditionEnum,
+  description: z.string().trim().max(2000).optional().nullable(),
+  location: z.string().trim().max(200).optional().nullable(),
+  acquisition_date: isoDateOnly.optional().nullable(),
+  created_at: z.coerce.date().optional().nullable(),
+  updated_at: z.coerce.date().optional().nullable(),
+  category: z.unknown().optional(),
+})
+
+export const settingsImportSchema = z.object({
+  categories: z.array(importCategorySchema).optional(),
+  departments: z.array(importDepartmentSchema).optional(),
+  employees: z.array(importEmployeeSchema).optional(),
+  equipment: z.array(importEquipmentSchema).optional(),
+})
+
 /**
  * Parse `body` avec `schema` ; renvoie soit les données validées, soit une
  * réponse 400 prête à `return`-er directement depuis le handler de route.
