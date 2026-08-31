@@ -40,6 +40,8 @@ export default function LoansPage() {
     return (
       l.employee?.name?.toLowerCase().includes(q) ||
       l.employee?.department?.name?.toLowerCase().includes(q) ||
+      l.prestataire_nom?.toLowerCase().includes(q) ||
+      l.campagne_nom?.toLowerCase().includes(q) ||
       l.items?.some(i => i.equipment?.category?.name.toLowerCase().includes(q))
     );
   });
@@ -139,13 +141,15 @@ export default function LoansPage() {
                     className="flex items-center justify-center w-11 h-11 rounded-full shrink-0 text-base font-bold text-white"
                     style={{ background: 'var(--et-primary)' }}
                   >
-                    {loan.employee?.name?.charAt(0).toUpperCase() ?? '?'}
+                    {(loan.employee?.name ?? loan.prestataire_nom)?.charAt(0).toUpperCase() ?? '?'}
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold" style={{ color: 'var(--et-text)' }}>{loan.employee?.name ?? '—'}</span>
+                      <span className="font-semibold" style={{ color: 'var(--et-text)' }}>
+                        {loan.employee?.name ?? (loan.prestataire_nom ? `CampTrack : ${loan.prestataire_nom}` : '—')}
+                      </span>
                       {loan.employee?.department && (
                         <div className="flex items-center gap-1">
                           {loan.employee.department.color && (

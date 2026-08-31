@@ -15,6 +15,7 @@ export const GET = withAuth<{ id: string }>(async (_req: NextRequest, { params }
           status: true,
           checkout_date: true,
           return_date: true,
+          prestataire_nom: true,
           employees: { select: { name: true, departments: { select: { name: true } } } },
         },
       },
@@ -29,10 +30,15 @@ export const GET = withAuth<{ id: string }>(async (_req: NextRequest, { params }
       status: item.loans.status,
       checkout_date: toDateStr(item.loans.checkout_date),
       return_date: toDateStr(item.loans.return_date),
-      employee: {
-        name: item.loans.employees.name,
-        department: item.loans.employees.departments ? { name: item.loans.employees.departments.name } : undefined,
-      },
+      employee: item.loans.employees
+        ? {
+            name: item.loans.employees.name,
+            department: item.loans.employees.departments ? { name: item.loans.employees.departments.name } : undefined,
+          }
+        : {
+            name: item.loans.prestataire_nom ? `CampTrack : ${item.loans.prestataire_nom}` : '—',
+            department: undefined,
+          },
     },
   }))
 

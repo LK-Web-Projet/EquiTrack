@@ -13,17 +13,19 @@ import {
   getIncidents, createIncident, resolveIncident, deleteIncident,
   getMaintenances, createMaintenance, deleteMaintenance,
   getEquipmentPhotos, uploadEquipmentPhoto, deleteEquipmentPhoto,
-  getEquipmentLoanHistory,
+  getEquipmentLoanHistory, getEquipmentChecklist,
 } from '@/lib/api';
 import type { Incident, Maintenance, EquipmentPhoto } from '@/lib/api';
 import { QRCodeCard } from '@/components/ui/QRCodeCard';
 import CameraCapture from '@/components/ui/CameraCapture';
 import ImageModal from '@/components/ui/ImageModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import ChecklistRatingList from '@/components/ui/ChecklistRatingList';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/components/ui/Toast';
 import { AI_FEATURES_ENABLED } from '@/lib/config';
-import type { Equipment, EquipmentStatus } from '@/types';
+import { CONDITION_LABELS, CONDITION_BADGE } from '@/lib/constants';
+import type { Equipment, EquipmentStatus, EquipmentCondition, ChecklistItemWithState } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -35,8 +37,6 @@ const STATUS_BADGE: Record<EquipmentStatus, string> = {
   available: 'badge badge-available', borrowed: 'badge badge-borrowed',
   broken: 'badge badge-broken', maintenance: 'badge badge-maintenance',
 };
-const CONDITION_LABELS = { good: 'Bon état', fair: 'Correct', poor: 'Mauvais état' };
-const CONDITION_BADGE = { good: 'badge badge-good', fair: 'badge badge-fair', poor: 'badge badge-poor' };
 const RETURN_LABELS = { good: 'Bon état', broken: 'En panne', damaged: 'Endommagé' };
 
 interface LoanHistoryRow {
@@ -84,6 +84,14 @@ export default function EquipmentDetailPage() {
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
   const [maintForm, setMaintForm] = useState({ description: '', performed_by: '', performed_at: format(new Date(), 'yyyy-MM-dd'), cost: '' });
   const [savingMaint, setSavingMaint] = useState(false);
+  const [checklistItems, setChecklistItems] = useState<ChecklistItemWithState[]>([]);
+  const [checklistValues, setChecklistValues] = useState<Record<string, EquipmentCondition>>({});
+
+  const loadChecklist = async () => {
+    const items = await getEquipmentChecklist(id);
+    setChecklistItems(items);
+    setChecklistValues(Object.fromEntries(items.map(i => [i.id, i.last_state])));
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -93,11 +101,12 @@ export default function EquipmentDetailPage() {
         setEquipment(eq);
         setNewStatus(eq.status);
 
-        const [loanData, incs, maints, pics] = await Promise.all([
+        const [loanData, incs, maints, pics, checklist] = await Promise.all([
           getEquipmentLoanHistory(id),
           getIncidents(id),
           getMaintenances(id),
           getEquipmentPhotos(id),
+          getEquipmentChecklist(id),
         ]);
 
         setHistory(loanData.map(d => ({
@@ -108,6 +117,8 @@ export default function EquipmentDetailPage() {
         setIncidents(incs);
         setMaintenances(maints);
         setPhotos(pics);
+        setChecklistItems(checklist);
+        setChecklistValues(Object.fromEntries(checklist.map(i => [i.id, i.last_state])));
       } catch {
         setNotFound(true);
       } finally {
@@ -239,10 +250,15 @@ export default function EquipmentDetailPage() {
         performed_by: maintForm.performed_by.trim() || undefined,
         performed_at: maintForm.performed_at,
         cost: maintForm.cost ? parseFloat(maintForm.cost) : undefined,
+        checklist: checklistItems.map(i => ({ checklist_item_id: i.id, state: checklistValues[i.id] ?? i.last_state })),
       });
       setMaintenances(prev => [m, ...prev]);
       setMaintForm({ description: '', performed_by: '', performed_at: format(new Date(), 'yyyy-MM-dd'), cost: '' });
       setShowMaintenanceForm(false);
+      // Recharge l'équipement (le badge d'état doit refléter le recalcul de condition) et la
+      // checklist (préremplissage du prochain formulaire avec le nouvel état connu).
+      const [updatedEquipment] = await Promise.all([getEquipmentItem(id), loadChecklist()]);
+      setEquipment(updatedEquipment);
     } catch (e) { toast.error('Erreur : ' + (e instanceof Error ? e.message : String(e))); }
     finally { setSavingMaint(false); }
   };
@@ -558,6 +574,11 @@ export default function EquipmentDetailPage() {
                     value={maintForm.cost} onChange={e => setMaintForm(f => ({ ...f, cost: e.target.value }))} />
                 </div>
               </div>
+              <ChecklistRatingList
+                items={checklistItems}
+                values={checklistValues}
+                onChange={(itemId, state) => setChecklistValues(prev => ({ ...prev, [itemId]: state }))}
+              />
               <button type="submit" disabled={savingMaint} className="btn btn-primary btn-sm">
                 {savingMaint ? <div className="spinner" style={{ width: '0.875rem', height: '0.875rem', borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> : <Wrench className="w-3.5 h-3.5" />}
                 {savingMaint ? 'Enregistrement…' : 'Enregistrer la maintenance'}

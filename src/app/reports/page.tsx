@@ -204,7 +204,7 @@ export default function ReportsPage() {
         const rows = depts.map(dept => {
           const deptEmps = emps.filter(e => e.department_id === dept.id);
           const deptEmpIds = new Set(deptEmps.map(e => e.id));
-          const deptLoans = loans.filter(l => deptEmpIds.has(l.employee_id));
+          const deptLoans = loans.filter(l => !!l.employee_id && deptEmpIds.has(l.employee_id));
           const active = deptLoans.filter(l => l.status === 'active').length;
           const totalItems = deptLoans.reduce((s, l) => s + (l.items?.length ?? 0), 0);
           return [dept.name, String(deptEmps.length), String(deptLoans.length), String(active), String(totalItems)];
@@ -238,7 +238,7 @@ export default function ReportsPage() {
         const q = empFilter.trim().toLowerCase();
         const matchingEmps = q ? emps.filter(e => e.name.toLowerCase().includes(q)) : emps;
         const matchingIds = new Set(matchingEmps.map(e => e.id));
-        const filtered = loans.filter(l => matchingIds.has(l.employee_id));
+        const filtered = loans.filter(l => !!l.employee_id && matchingIds.has(l.employee_id));
         const rows: string[][] = [];
         for (const loan of filtered) {
           for (const item of loan.items ?? []) {

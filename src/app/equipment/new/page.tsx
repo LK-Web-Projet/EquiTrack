@@ -26,7 +26,6 @@ function NewEquipmentForm() {
     category_id: preselectedCat,
     quantity: 1,
     serial_number: '',
-    condition: 'good' as 'good' | 'fair' | 'poor',
     location: '',
     description: '',
     acquisition_date: '',
@@ -93,7 +92,7 @@ function NewEquipmentForm() {
           display_number: String(seqNum).padStart(3, '0'),
           serial_number: qty === 1 && form.serial_number.trim() ? form.serial_number.trim() : undefined,
           status: 'available',
-          condition: form.condition,
+          condition: 'good',
           location: form.location.trim() || undefined,
           description: form.description.trim() || undefined,
           acquisition_date: form.acquisition_date || undefined,
@@ -240,19 +239,6 @@ function NewEquipmentForm() {
                 </div>
               </div>
             )}
-
-            <div>
-              <label className="et-label">État initial</label>
-              <select
-                className="et-select"
-                value={form.condition}
-                onChange={e => setForm(f => ({ ...f, condition: e.target.value as 'good' | 'fair' | 'poor' }))}
-              >
-                <option value="good">Bon état</option>
-                <option value="fair">Correct</option>
-                <option value="poor">Mauvais état</option>
-              </select>
-            </div>
 
             <div>
               <label className="et-label">Localisation <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>

@@ -8,6 +8,12 @@ const isoDateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide (AAAA
 
 export const equipmentStatusEnum = z.enum(['available', 'borrowed', 'broken', 'maintenance'])
 export const equipmentConditionEnum = z.enum(['good', 'fair', 'poor'])
+export const checklistPriorityEnum = z.enum(['low', 'normal', 'critical'])
+
+const checklistRatingSchema = z.object({
+  checklist_item_id: uuid,
+  state: equipmentConditionEnum,
+}).strict()
 
 // ─── Categories ───────────────────────────────────────────────
 export const categoryCreateSchema = z.object({
@@ -16,6 +22,8 @@ export const categoryCreateSchema = z.object({
   icon: z.string().trim().min(1).max(8).optional(),
   color: hexColor.optional(),
   description: z.string().trim().max(2000).optional().nullable(),
+  camptrack_service_ids: z.array(z.string().trim().min(1)).max(30).optional(),
+  camptrack_service_names: z.array(z.string().trim().min(1)).max(30).optional(),
 }).strict()
 export const categoryUpdateSchema = categoryCreateSchema.partial()
 
@@ -76,7 +84,18 @@ export const maintenanceCreateSchema = z.object({
   description: z.string().trim().min(1, 'Description requise').max(2000),
   performed_by: z.string().trim().max(150).optional(),
   cost: z.number().nonnegative().optional(),
+  checklist: z.array(checklistRatingSchema).max(50).optional(),
 }).strict()
+
+// ─── Checklist d'inspection (par catégorie) ────────────────────
+export const checklistItemCreateSchema = z.object({
+  name: z.string().trim().min(1, 'Nom requis').max(120),
+  priority: checklistPriorityEnum,
+  order: z.number().int().optional(),
+}).strict()
+export const checklistItemUpdateSchema = checklistItemCreateSchema.partial().extend({
+  active: z.boolean().optional(),
+})
 
 // ─── Loans ────────────────────────────────────────────────────
 export const loanCreateSchema = z.object({
@@ -97,7 +116,22 @@ export const loanReturnSchema = z.object({
     equipment_id: uuid,
     return_condition: z.enum(['good', 'broken', 'damaged']),
     return_notes: z.string().trim().max(2000).optional().nullable(),
+    checklist: z.array(checklistRatingSchema).max(50).optional(),
   }).strict()).min(1, 'Aucun équipement à retourner'),
+}).strict()
+
+// ─── Intégration (CampTrack → EquiTrack) : prêt externe ─────────
+export const externalLoanCreateSchema = z.object({
+  campagne_id: z.string().trim().min(1, 'campagne_id requis').max(60),
+  campagne_nom: z.string().trim().max(200).optional().nullable(),
+  prestataire_id: z.string().trim().min(1, 'prestataire_id requis').max(60),
+  prestataire_nom: z.string().trim().min(1, 'Nom du prestataire requis').max(200),
+  service_id: z.string().trim().min(1, 'service_id requis').max(60),
+  checkout_date: isoDateOnly,
+  checkout_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Heure invalide'),
+  expected_return_date: isoDateOnly.optional().nullable(),
+  checkout_notes: z.string().trim().max(2000).optional().nullable(),
+  equipment_ids: z.array(uuid).min(1, 'Aucun équipement sélectionné'),
 }).strict()
 
 // ─── Setup initial : création du tout premier compte admin ─────

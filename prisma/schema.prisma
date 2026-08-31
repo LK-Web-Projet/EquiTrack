@@ -8,14 +8,22 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model categories {
-  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  code        String      @unique
-  icon        String      @default("📦")
-  color       String      @default("#3b82f6")
-  description String?
-  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
-  equipment   equipment[]
+  id                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String
+  code                    String            @unique
+  icon                    String            @default("📦")
+  color                   String            @default("#3b82f6")
+  description             String?
+  // Services CampTrack autorisés à emprunter cette catégorie (intégration CampTrack ↔ EquiTrack) ;
+  // tableau vide = aucune restriction, utilisable pour n'importe quelle campagne. Les ids sont la
+  // source de vérité (matching), les noms sont un instantané dénormalisé pour l'affichage sans
+  // appel réseau — les deux tableaux sont toujours écrits ensemble (même index), voir le
+  // sélecteur dans src/app/categories/{new,[id]/edit}/page.tsx.
+  camptrack_service_ids   String[]          @default([])
+  camptrack_service_names String[]          @default([])
+  created_at              DateTime?         @default(now()) @db.Timestamptz(6)
+  equipment               equipment[]
+  checklist_items         checklist_items[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -45,22 +53,23 @@ model employees {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model equipment {
-  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  category_id       String         @db.Uuid
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id       String              @db.Uuid
   sequential_number Int
   display_number    String
   serial_number     String?
-  status            String         @default("available")
-  condition         String         @default("good")
+  status            String              @default("available")
+  condition         String              @default("good")
   description       String?
   location          String?
-  acquisition_date  DateTime?      @db.Date
-  created_at        DateTime?      @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime?      @default(now()) @db.Timestamptz(6)
-  categories        categories     @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  acquisition_date  DateTime?           @db.Date
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  categories        categories          @relation(fields: [category_id], references: [id], onUpdate: NoAction)
   incidents         incidents[]
   loan_items        loan_items[]
   maintenances      maintenances[]
+  checklist_results checklist_results[]
 
   @@unique([category_id, sequential_number])
   @@index([category_id], map: "idx_equipment_category")
@@ -84,13 +93,14 @@ model incidents {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model loan_items {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  loan_id          String    @db.Uuid
-  equipment_id     String    @db.Uuid
-  return_condition String?
-  return_notes     String?
-  equipment        equipment @relation(fields: [equipment_id], references: [id], onUpdate: NoAction)
-  loans            loans     @relation(fields: [loan_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  loan_id           String              @db.Uuid
+  equipment_id      String              @db.Uuid
+  return_condition  String?
+  return_notes      String?
+  equipment         equipment           @relation(fields: [equipment_id], references: [id], onUpdate: NoAction)
+  loans             loans               @relation(fields: [loan_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  checklist_results checklist_results[]
 
   @@unique([loan_id, equipment_id])
   @@index([equipment_id], map: "idx_loan_items_equipment")
@@ -101,7 +111,15 @@ model loan_items {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model loans {
   id                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  employee_id          String       @db.Uuid
+  employee_id          String?      @db.Uuid
+  // Emprunteur externe (intégration CampTrack) : renseigné à la place de employee_id quand le
+  // matériel est remis à un prestataire CampTrack plutôt qu'à un employé interne. Pas de FK réelle
+  // possible (base séparée) — campagne_nom/prestataire_nom sont dénormalisés pour l'affichage.
+  source               String       @default("internal")
+  campagne_id          String?
+  campagne_nom         String?
+  prestataire_id       String?
+  prestataire_nom      String?
   checkout_date        DateTime     @default(dbgenerated("CURRENT_DATE")) @db.Date
   checkout_time        DateTime     @default(dbgenerated("CURRENT_TIME")) @db.Time(6)
   expected_return_date DateTime?    @db.Date
@@ -113,24 +131,67 @@ model loans {
   status               String       @default("active")
   created_at           DateTime?    @default(now()) @db.Timestamptz(6)
   loan_items           loan_items[]
-  employees            employees    @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+  employees            employees?   @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
 
   @@index([employee_id], map: "idx_loans_employee")
   @@index([status], map: "idx_loans_status")
+  @@index([campagne_id], map: "idx_loans_campagne")
+  @@index([prestataire_id], map: "idx_loans_prestataire")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model maintenances {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  equipment_id String    @db.Uuid
-  performed_at DateTime  @db.Date
-  description  String
-  performed_by String?
-  cost         Decimal?  @db.Decimal
-  created_at   DateTime? @default(now()) @db.Timestamptz(6)
-  equipment    equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  equipment_id      String              @db.Uuid
+  performed_at      DateTime            @db.Date
+  description       String
+  performed_by      String?
+  cost              Decimal?            @db.Decimal
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  equipment         equipment           @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  checklist_results checklist_results[]
 
   @@index([equipment_id], map: "idx_maintenances_equip")
+}
+
+/// Checklist de pièces à inspecter, configurable par catégorie (ex. Vélos → Cadre, Freins, Chaîne).
+/// Soft-delete uniquement (active:false) : jamais de suppression physique, pour ne jamais invalider
+/// un checklist_results déjà enregistré qui le référence.
+model checklist_items {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id       String              @db.Uuid
+  name              String
+  priority          String              @default("normal")
+  order             Int                 @default(0)
+  active            Boolean             @default(true)
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  categories        categories          @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  checklist_results checklist_results[]
+
+  @@unique([category_id, name])
+  @@index([category_id], map: "idx_checklist_items_category")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// Note d'un item de checklist pour UN événement (maintenance OU retour de prêt, jamais les deux —
+/// voir contrainte checklist_results_event_xor_check). equipment_id est dénormalisé pour retrouver
+/// directement le dernier état connu par item pour un équipement.
+model checklist_results {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  checklist_item_id String          @db.Uuid
+  equipment_id      String          @db.Uuid
+  state             String
+  maintenance_id    String?         @db.Uuid
+  loan_item_id      String?         @db.Uuid
+  created_at        DateTime?       @default(now()) @db.Timestamptz(6)
+  checklist_items   checklist_items @relation(fields: [checklist_item_id], references: [id], onUpdate: NoAction)
+  equipment         equipment       @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maintenances      maintenances?   @relation(fields: [maintenance_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  loan_items        loan_items?     @relation(fields: [loan_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([equipment_id, checklist_item_id], map: "idx_checklist_results_equipment_item")
+  @@index([maintenance_id], map: "idx_checklist_results_maintenance")
+  @@index([loan_item_id], map: "idx_checklist_results_loan_item")
 }
 
 // ─── Comptes applicatifs (auth maison + rôle) ────────────────────────────

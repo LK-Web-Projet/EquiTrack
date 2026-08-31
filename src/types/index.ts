@@ -2,6 +2,30 @@ export type EquipmentStatus = 'available' | 'borrowed' | 'broken' | 'maintenance
 export type EquipmentCondition = 'good' | 'fair' | 'poor'
 export type ReturnCondition = 'good' | 'broken' | 'damaged'
 export type LoanStatus = 'active' | 'returned'
+export type ChecklistPriority = 'low' | 'normal' | 'critical'
+
+export interface ChecklistItem {
+  id: string
+  category_id: string
+  name: string
+  priority: ChecklistPriority
+  order: number
+  active: boolean
+  created_at: string
+}
+
+export interface ChecklistItemWithState {
+  id: string
+  name: string
+  priority: ChecklistPriority
+  order: number
+  last_state: EquipmentCondition
+}
+
+export interface ChecklistRating {
+  checklist_item_id: string
+  state: EquipmentCondition
+}
 
 export interface Category {
   id: string
@@ -10,6 +34,8 @@ export interface Category {
   icon: string
   color: string
   description?: string
+  camptrack_service_ids?: string[]
+  camptrack_service_names?: string[]
   created_at: string
 }
 
@@ -49,7 +75,12 @@ export interface Equipment {
 
 export interface Loan {
   id: string
-  employee_id: string
+  employee_id?: string | null
+  source?: 'internal' | 'external'
+  campagne_id?: string | null
+  campagne_nom?: string | null
+  prestataire_id?: string | null
+  prestataire_nom?: string | null
   checkout_date: string
   checkout_time: string
   expected_return_date?: string

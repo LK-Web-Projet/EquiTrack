@@ -30,6 +30,7 @@ export default function EmployeesPage() {
       setEmployees(emps);
       const counts: Record<string, number> = {};
       for (const l of activeLoansList) {
+        if (!l.employee_id) continue;
         counts[l.employee_id] = (counts[l.employee_id] ?? 0) + 1;
       }
       setActiveLoans(counts);

@@ -56,7 +56,7 @@ type LoanItemWithEquipment = {
 } & Record<string, unknown>
 
 type LoanWithRelations = {
-  employees?: EmployeeWithDept
+  employees?: EmployeeWithDept | null
   loan_items?: LoanItemWithEquipment[]
   checkout_date?: Date | null
   checkout_time?: Date | null

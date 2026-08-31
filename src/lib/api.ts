@@ -1,4 +1,7 @@
-import type { Category, Department, Employee, Equipment, Loan, LoanStatus, ReturnCondition } from '@/types'
+import type {
+  Category, Department, Employee, Equipment, Loan, LoanStatus, ReturnCondition,
+  ChecklistItem, ChecklistItemWithState, ChecklistPriority, ChecklistRating,
+} from '@/types'
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -21,6 +24,32 @@ export const updateCategory = (id: string, updates: Partial<Category>): Promise<
 
 export const deleteCategory = (id: string): Promise<void> =>
   apiFetch(`/api/categories/${id}`, { method: 'DELETE' })
+
+export interface CamptrackService { id_service: string; nom: string }
+export const getCamptrackServices = (): Promise<CamptrackService[]> => apiFetch('/api/camptrack/services')
+
+// ─── Checklist d'inspection (par catégorie) ────────────────────
+export const getCategoryChecklist = (categoryId: string): Promise<ChecklistItem[]> =>
+  apiFetch(`/api/categories/${categoryId}/checklist`)
+
+export const createChecklistItem = (
+  categoryId: string,
+  item: { name: string; priority: ChecklistPriority; order?: number }
+): Promise<ChecklistItem> =>
+  apiFetch(`/api/categories/${categoryId}/checklist`, { method: 'POST', body: JSON.stringify(item) })
+
+export const updateChecklistItem = (
+  categoryId: string,
+  itemId: string,
+  updates: Partial<Pick<ChecklistItem, 'name' | 'priority' | 'order' | 'active'>>
+): Promise<ChecklistItem> =>
+  apiFetch(`/api/categories/${categoryId}/checklist/${itemId}`, { method: 'PATCH', body: JSON.stringify(updates) })
+
+export const deactivateChecklistItem = (categoryId: string, itemId: string): Promise<ChecklistItem> =>
+  apiFetch(`/api/categories/${categoryId}/checklist/${itemId}`, { method: 'DELETE' })
+
+export const getEquipmentChecklist = (equipmentId: string): Promise<ChecklistItemWithState[]> =>
+  apiFetch(`/api/equipment/${equipmentId}/checklist`)
 
 // ─── Departments ──────────────────────────────────────────────
 export const getDepartments = (): Promise<Department[]> => apiFetch('/api/departments')
@@ -93,7 +122,12 @@ export const returnLoan = (
     return_date: string
     return_time: string
     return_notes?: string
-    items: Array<{ equipment_id: string; return_condition: ReturnCondition; return_notes?: string }>
+    items: Array<{
+      equipment_id: string
+      return_condition: ReturnCondition
+      return_notes?: string
+      checklist?: ChecklistRating[]
+    }>
   }
 ): Promise<Loan> =>
   apiFetch(`/api/loans/${loanId}/return`, { method: 'POST', body: JSON.stringify(returnData) })
@@ -159,7 +193,9 @@ export interface Maintenance {
 export const getMaintenances = (equipment_id: string): Promise<Maintenance[]> =>
   apiFetch(`/api/maintenances?equipment_id=${equipment_id}`)
 
-export const createMaintenance = (m: Omit<Maintenance, 'id' | 'created_at'>): Promise<Maintenance> =>
+export const createMaintenance = (
+  m: Omit<Maintenance, 'id' | 'created_at'> & { checklist?: ChecklistRating[] }
+): Promise<Maintenance> =>
   apiFetch('/api/maintenances', { method: 'POST', body: JSON.stringify(m) })
 
 export const deleteMaintenance = (id: string): Promise<void> =>

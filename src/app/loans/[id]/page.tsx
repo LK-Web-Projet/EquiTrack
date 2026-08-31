@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Clock, User, FileText, ChevronsDown } from 'lucide-react';
-import { getLoan, returnLoan } from '@/lib/api';
-import type { Loan, LoanItem, ReturnCondition } from '@/types';
+import { getLoan, returnLoan, getEquipmentChecklist } from '@/lib/api';
+import ChecklistRatingList from '@/components/ui/ChecklistRatingList';
+import type { Loan, LoanItem, ReturnCondition, ChecklistItemWithState, EquipmentCondition } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -31,6 +32,8 @@ export default function LoanDetailPage() {
   // Return form state
   const [returnConditions, setReturnConditions] = useState<Record<string, ReturnCondition>>({});
   const [returnNotes, setReturnNotes] = useState('');
+  const [checklistByEquipment, setChecklistByEquipment] = useState<Record<string, ChecklistItemWithState[]>>({});
+  const [checklistValues, setChecklistValues] = useState<Record<string, Record<string, EquipmentCondition>>>({});
   // Editable return date/time (initialised on load, not on render)
   const [returnDate, setReturnDate] = useState('');
   const [returnTime, setReturnTime] = useState('');
@@ -52,6 +55,18 @@ export default function LoanDetailPage() {
           const initial: Record<string, ReturnCondition> = {};
           for (const item of l.items) initial[item.equipment_id] = 'good';
           setReturnConditions(initial);
+
+          // Chaque équipement récupère la checklist de SA propre catégorie — un prêt peut
+          // mélanger plusieurs catégories.
+          const checklists = await Promise.all(l.items.map(item => getEquipmentChecklist(item.equipment_id)));
+          const byEquipment: Record<string, ChecklistItemWithState[]> = {};
+          const values: Record<string, Record<string, EquipmentCondition>> = {};
+          l.items.forEach((item, idx) => {
+            byEquipment[item.equipment_id] = checklists[idx];
+            values[item.equipment_id] = Object.fromEntries(checklists[idx].map(i => [i.id, i.last_state]));
+          });
+          setChecklistByEquipment(byEquipment);
+          setChecklistValues(values);
         }
       }
     } catch {
@@ -83,6 +98,10 @@ export default function LoanDetailPage() {
         items: loan.items.map(item => ({
           equipment_id: item.equipment_id,
           return_condition: returnConditions[item.equipment_id] ?? 'good',
+          checklist: (checklistByEquipment[item.equipment_id] ?? []).map(ci => ({
+            checklist_item_id: ci.id,
+            state: checklistValues[item.equipment_id]?.[ci.id] ?? ci.last_state,
+          })),
         })),
       });
       setLoan(updated);
@@ -157,18 +176,24 @@ export default function LoanDetailPage() {
         {/* ── Employé + Détails ── */}
         <div className="grid md:grid-cols-2 gap-5">
           <div className="card p-5">
-            <p className="section-label">Employé</p>
+            <p className="section-label">{loan.employee_id ? 'Employé' : 'Emprunteur'}</p>
             <div className="flex items-center gap-3 mt-3">
               <div
                 className="flex items-center justify-center w-12 h-12 rounded-full text-base font-bold text-white shrink-0"
                 style={{ background: 'var(--et-primary)' }}
               >
-                {loan.employee?.name?.charAt(0).toUpperCase() ?? '?'}
+                {(loan.employee?.name ?? loan.prestataire_nom)?.charAt(0).toUpperCase() ?? '?'}
               </div>
               <div>
-                <Link href={`/employees/${loan.employee_id}`} className="font-semibold" style={{ color: 'var(--et-text)' }}>
-                  {loan.employee?.name ?? '—'}
-                </Link>
+                {loan.employee_id ? (
+                  <Link href={`/employees/${loan.employee_id}`} className="font-semibold" style={{ color: 'var(--et-text)' }}>
+                    {loan.employee?.name ?? '—'}
+                  </Link>
+                ) : (
+                  <span className="font-semibold" style={{ color: 'var(--et-text)' }}>
+                    {loan.prestataire_nom ? `CampTrack : ${loan.prestataire_nom}` : '—'}
+                  </span>
+                )}
                 {loan.employee?.department && (
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {loan.employee.department.color && (
@@ -179,6 +204,9 @@ export default function LoanDetailPage() {
                 )}
                 {loan.employee?.phone && (
                   <p className="text-sm mt-0.5" style={{ color: 'var(--et-text-muted)' }}>{loan.employee.phone}</p>
+                )}
+                {!loan.employee_id && loan.campagne_nom && (
+                  <p className="text-sm mt-0.5" style={{ color: 'var(--et-text-muted)' }}>Campagne : {loan.campagne_nom}</p>
                 )}
               </div>
             </div>
@@ -327,26 +355,36 @@ export default function LoanDetailPage() {
                 {loan.items?.map(item => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 flex-wrap p-3 rounded-xl"
+                    className="p-3 rounded-xl space-y-3"
                     style={{ background: 'var(--et-surface-2)' }}
                   >
-                    <span className="eq-number">{item.equipment?.category?.code}-{item.equipment?.display_number}</span>
-                    <span className="text-sm hidden sm:inline" style={{ color: 'var(--et-text-secondary)' }}>
-                      {item.equipment?.category?.name}
-                    </span>
-                    <select
-                      className="et-select ml-auto"
-                      style={{ width: 'auto', minWidth: '150px' }}
-                      value={returnConditions[item.equipment_id] ?? 'good'}
-                      onChange={e => setReturnConditions(prev => ({
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="eq-number">{item.equipment?.category?.code}-{item.equipment?.display_number}</span>
+                      <span className="text-sm hidden sm:inline" style={{ color: 'var(--et-text-secondary)' }}>
+                        {item.equipment?.category?.name}
+                      </span>
+                      <select
+                        className="et-select ml-auto"
+                        style={{ width: 'auto', minWidth: '150px' }}
+                        value={returnConditions[item.equipment_id] ?? 'good'}
+                        onChange={e => setReturnConditions(prev => ({
+                          ...prev,
+                          [item.equipment_id]: e.target.value as ReturnCondition,
+                        }))}
+                      >
+                        <option value="good">✅ Bon état</option>
+                        <option value="damaged">⚠️ Endommagé</option>
+                        <option value="broken">❌ En panne</option>
+                      </select>
+                    </div>
+                    <ChecklistRatingList
+                      items={checklistByEquipment[item.equipment_id] ?? []}
+                      values={checklistValues[item.equipment_id] ?? {}}
+                      onChange={(itemId, state) => setChecklistValues(prev => ({
                         ...prev,
-                        [item.equipment_id]: e.target.value as ReturnCondition,
+                        [item.equipment_id]: { ...prev[item.equipment_id], [itemId]: state },
                       }))}
-                    >
-                      <option value="good">✅ Bon état</option>
-                      <option value="damaged">⚠️ Endommagé</option>
-                      <option value="broken">❌ En panne</option>
-                    </select>
+                    />
                   </div>
                 ))}
               </div>

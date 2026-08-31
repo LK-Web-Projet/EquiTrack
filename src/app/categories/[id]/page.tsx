@@ -5,12 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Plus, Package, Pencil, Trash2, Eye,
-  X, Save, MapPin, Tag, FileText, Calendar
+  X, Save, MapPin, Tag, FileText, Calendar, ListChecks
 } from 'lucide-react';
 import { getCategories, getEquipment, updateEquipment, deleteEquipment } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useToast } from '@/components/ui/Toast';
+import { CONDITION_LABELS, CONDITION_BADGE } from '@/lib/constants';
+import { conditionForStatus } from '@/lib/equipment-state';
 import type { Category, Equipment, EquipmentStatus, EquipmentCondition } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -22,12 +24,6 @@ const STATUS_LABELS: Record<EquipmentStatus, string> = {
 const STATUS_BADGE: Record<EquipmentStatus, string> = {
   available: 'badge badge-available', borrowed: 'badge badge-borrowed',
   broken: 'badge badge-broken', maintenance: 'badge badge-maintenance',
-};
-const CONDITION_LABELS: Record<EquipmentCondition, string> = {
-  good: 'Bon état', fair: 'Correct', poor: 'Mauvais état',
-};
-const CONDITION_BADGE: Record<EquipmentCondition, string> = {
-  good: 'badge badge-good', fair: 'badge badge-fair', poor: 'badge badge-poor',
 };
 
 interface EditForm {
@@ -193,9 +189,14 @@ export default function CategoryDetailPage() {
             {category.description && <p className="page-subtitle">{category.description}</p>}
           </div>
         </div>
-        <Link href={`/equipment/new?category=${id}`} className="btn btn-primary">
-          <Plus className="w-4 h-4" /> Ajouter un équipement
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/categories/${id}/checklist`} className="btn btn-secondary">
+            <ListChecks className="w-4 h-4" /> Checklist
+          </Link>
+          <Link href={`/equipment/new?category=${id}`} className="btn btn-primary">
+            <Plus className="w-4 h-4" /> Ajouter un équipement
+          </Link>
+        </div>
       </div>
 
       <div className="px-4 md:px-7 pb-8 space-y-5">
@@ -425,7 +426,7 @@ export default function CategoryDetailPage() {
                         type="radio"
                         name="edit-status"
                         checked={editForm.status === s}
-                        onChange={() => setEditForm(f => ({ ...f, status: s }))}
+                        onChange={() => setEditForm(f => ({ ...f, status: s, condition: conditionForStatus(s, f.condition) }))}
                         style={{ accentColor: 'var(--et-primary)' }}
                       />
                       <span className={STATUS_BADGE[s]}>{STATUS_LABELS[s]}</span>
@@ -434,31 +435,38 @@ export default function CategoryDetailPage() {
                 </div>
               </div>
 
-              {/* État / Condition */}
+              {/* État / Condition — options limitées à ce que le statut choisi autorise : disponible/emprunté
+                  ⇒ toujours "bon état" ; en panne/maintenance ⇒ jamais "bon état". */}
               <div>
                 <label className="et-label flex items-center gap-1.5">
                   <Tag className="w-3.5 h-3.5" /> État général
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['good', 'fair', 'poor'] as EquipmentCondition[]).map(c => (
-                    <label
-                      key={c}
-                      className="flex items-center justify-center gap-2 p-2.5 rounded-lg cursor-pointer text-center"
-                      style={{
-                        background: editForm.condition === c ? 'var(--et-primary-light)' : 'var(--et-surface-2)',
-                        border: `1.5px solid ${editForm.condition === c ? 'var(--et-primary-muted)' : 'transparent'}`,
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="edit-condition"
-                        checked={editForm.condition === c}
-                        onChange={() => setEditForm(f => ({ ...f, condition: c }))}
-                        style={{ accentColor: 'var(--et-primary)' }}
-                      />
-                      <span className={CONDITION_BADGE[c]}>{CONDITION_LABELS[c]}</span>
-                    </label>
-                  ))}
+                  {(['good', 'fair', 'poor'] as EquipmentCondition[]).map(c => {
+                    const allowed = conditionForStatus(editForm.status, c) === c;
+                    return (
+                      <label
+                        key={c}
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-lg"
+                        style={{
+                          background: editForm.condition === c ? 'var(--et-primary-light)' : 'var(--et-surface-2)',
+                          border: `1.5px solid ${editForm.condition === c ? 'var(--et-primary-muted)' : 'transparent'}`,
+                          opacity: allowed ? 1 : 0.4,
+                          cursor: allowed ? 'pointer' : 'not-allowed',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="edit-condition"
+                          disabled={!allowed}
+                          checked={editForm.condition === c}
+                          onChange={() => setEditForm(f => ({ ...f, condition: c }))}
+                          style={{ accentColor: 'var(--et-primary)' }}
+                        />
+                        <span className={CONDITION_BADGE[c]}>{CONDITION_LABELS[c]}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 

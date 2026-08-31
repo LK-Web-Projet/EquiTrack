@@ -8,7 +8,7 @@ import { Prisma, type User } from '@prisma/client'
 // Traduit les erreurs Prisma courantes en réponses HTTP propres, pour ne pas
 // laisser fuiter un 500 brut (ou un message d'erreur interne) au client
 // quand un id est introuvable ou qu'une contrainte unique est violée.
-function toErrorResponse(err: unknown): NextResponse {
+export function toErrorResponse(err: unknown): NextResponse {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2025') {
       return NextResponse.json({ error: 'Ressource introuvable' }, { status: 404 })

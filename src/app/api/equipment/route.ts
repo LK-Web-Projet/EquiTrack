@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withAuth, withAdmin } from '@/lib/api-auth'
 import { shapeEquipment, parseDateOnly } from '@/lib/api-shape'
 import { equipmentCreateSchema, validateBody } from '@/lib/validation'
+import { conditionForStatus } from '@/lib/equipment-state'
 
 export const GET = withAuth(async (req: NextRequest) => {
   const url = new URL(req.url)
@@ -21,8 +22,14 @@ export const POST = withAdmin(async (req: NextRequest) => {
   const { data: body, error } = validateBody(equipmentCreateSchema, await req.json())
   if (error) return error
 
+  const status = body.status ?? 'available'
   const equipment = await prisma.equipment.create({
-    data: { ...body, acquisition_date: parseDateOnly(body.acquisition_date) ?? null },
+    data: {
+      ...body,
+      status,
+      condition: conditionForStatus(status, body.condition),
+      acquisition_date: parseDateOnly(body.acquisition_date) ?? null,
+    },
     include: { categories: true },
   })
   return NextResponse.json({ data: shapeEquipment(equipment) })

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Save } from 'lucide-react';
 import { getCategories, updateCategory } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth-context';
+import { CamptrackServicePicker } from '@/components/ui/CamptrackServicePicker';
 import type { Category } from '@/types';
 
 export default function EditCategoryPage() {
@@ -13,7 +14,10 @@ export default function EditCategoryPage() {
   const router = useRouter();
   const { loading: adminLoading, isAdmin } = useRequireAdmin();
   const [category, setCategory] = useState<Category | null>(null);
-  const [form, setForm] = useState({ name: '', code: '', icon: '', color: '#3b82f6', description: '' });
+  const [form, setForm] = useState({
+    name: '', code: '', icon: '', color: '#3b82f6', description: '',
+    camptrack_service_ids: [] as string[], camptrack_service_names: [] as string[],
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -23,7 +27,10 @@ export default function EditCategoryPage() {
       const cat = cats.find(c => c.id === id);
       if (!cat) { router.push('/categories'); return; }
       setCategory(cat);
-      setForm({ name: cat.name, code: cat.code, icon: cat.icon, color: cat.color, description: cat.description ?? '' });
+      setForm({
+        name: cat.name, code: cat.code, icon: cat.icon, color: cat.color, description: cat.description ?? '',
+        camptrack_service_ids: cat.camptrack_service_ids ?? [], camptrack_service_names: cat.camptrack_service_names ?? [],
+      });
     }).catch(console.error).finally(() => setLoading(false));
   }, [id, router]);
 
@@ -39,6 +46,8 @@ export default function EditCategoryPage() {
         icon: form.icon || '📦',
         color: form.color,
         description: form.description.trim() || undefined,
+        camptrack_service_ids: form.camptrack_service_ids,
+        camptrack_service_names: form.camptrack_service_names,
       });
       router.push('/categories');
     } catch (e: unknown) {
@@ -115,6 +124,18 @@ export default function EditCategoryPage() {
             <div>
               <label htmlFor="cat-edit-description" className="et-label">Description <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span></label>
               <textarea id="cat-edit-description" className="et-textarea" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+            </div>
+            <div>
+              <label className="et-label">
+                Services CampTrack <span style={{ color: 'var(--et-text-muted)', fontWeight: 400 }}>(optionnel)</span>
+              </label>
+              <CamptrackServicePicker
+                selectedIds={form.camptrack_service_ids}
+                onChange={(ids, names) => setForm(f => ({ ...f, camptrack_service_ids: ids, camptrack_service_names: names }))}
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--et-text-muted)' }}>
+                Cochez les services autorisés à emprunter cette catégorie. Aucune case cochée = utilisable pour n&apos;importe quelle campagne.
+              </p>
             </div>
 
             <div className="flex items-center gap-3 pt-2">
