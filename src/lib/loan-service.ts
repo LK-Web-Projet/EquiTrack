@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import { parseDateOnly, parseTimeOnly } from '@/lib/api-shape'
 import { applyChecklistResults } from '@/lib/checklist-service'
 import { conditionForStatus } from '@/lib/equipment-state'
-import type { EquipmentStatus } from '@/types'
+import type { EquipmentStatus, EquipmentCondition } from '@/types'
 
 export class EquipmentUnavailableError extends Error {}
 
@@ -103,25 +103,19 @@ export async function processReturn(
       data: { return_condition: item.return_condition, return_notes: item.return_notes || null },
     })
 
-    // 'broken' → équipement hors service. 'damaged' → dégradé mais pas hors service : part en
-    // maintenance plutôt que "disponible" (sinon condition='good' forcé par défaut ci-dessous
-    // contredirait le constat de dégradation — même incohérence que status/condition évitée partout
-    // ailleurs). 'good' → disponible.
-    let status: EquipmentStatus =
+    // 'broken' → équipement hors service. 'damaged' → dégradé mais réparable : part en maintenance
+    // plutôt que "disponible" immédiatement. 'good' → disponible. Aucune contrainte n'exige que
+    // "disponible" soit "bon état" (du matériel disponible peut être correct/mauvais) — seul un
+    // équipement en panne/maintenance ne peut jamais rester "bon" (voir conditionForStatus).
+    const status: EquipmentStatus =
       item.return_condition === 'broken' ? 'broken' :
       item.return_condition === 'damaged' ? 'maintenance' :
       'available'
-    let condition = conditionForStatus(status)
+    let condition: EquipmentCondition | undefined = conditionForStatus(status)
 
     if (item.checklist?.length) {
       const rawCondition = await applyChecklistResults(tx, { equipment_id: item.equipment_id, loan_item_id: updatedItem.id, ratings: item.checklist })
-      if (rawCondition) {
-        if (status === 'available' && rawCondition !== 'good') {
-          // Le dropdown dit "bon état" mais la checklist a trouvé un défaut : la checklist l'emporte.
-          status = 'maintenance'
-        }
-        condition = conditionForStatus(status, rawCondition)
-      }
+      if (rawCondition) condition = conditionForStatus(status, rawCondition)
     }
 
     await tx.equipment.update({
