@@ -20,17 +20,16 @@ Format de chaque entrée :
 À chaque changement notable : incrémenter `version` dans `package.json`, puis ajouter une entrée ici (la plus récente en haut).
 
 ---
-Rebuild
+
 ## [0.6.0] - 2026-08-27
 
 ### Ajouté
-- Contrainte de cohérence entre `status` et `condition` d'un équipement, posée en base (`equipment_status_condition_check`) et reflétée côté applicatif (`src/lib/equipment-state.ts`) : disponible/emprunté ⇒ toujours "bon état" ; en panne/maintenance ⇒ jamais "bon état" (correct ou mauvais uniquement). Deux équipements réels en violation ont été corrigés au passage de la migration.
+- Contrainte de cohérence entre `status` et `condition` d'un équipement — **voir correctif 0.6.1 ci-dessus, la règle "disponible ⇒ toujours bon état" décrite ici était erronée.**
 
 ### Modifié
-- Changer le statut d'un équipement (sélecteur rapide, formulaire d'édition) ajuste désormais automatiquement son état pour rester cohérent, sans double saisie.
-- Retour de prêt : si la checklist d'inspection détecte un défaut alors que le retour était déclaré "bon état", l'équipement part en maintenance au lieu de redevenir disponible (la checklist l'emporte). `return_condition = 'damaged'` fait désormais passer l'équipement en "maintenance" plutôt qu'en "disponible" (comportement précédent incohérent : un retour endommagé rendait l'équipement immédiatement re-disponible).
-- Maintenance : si la checklist trouve un défaut sur un équipement encore marqué disponible, le statut bascule automatiquement en maintenance. À l'inverse, un état "bon" constaté par la checklist ne fait jamais repasser automatiquement en disponible — action volontaire distincte.
-- Formulaire de création d'équipement : le sélecteur d'état initial est retiré (le statut est toujours "disponible" à la création, donc l'état est toujours "bon").
+- Changer le statut d'un équipement (sélecteur rapide, formulaire d'édition) ajuste désormais automatiquement son état pour rester cohérent, sans double saisie (affiné en 0.6.1).
+- Retour de prêt : `return_condition = 'damaged'` fait désormais passer l'équipement en "maintenance" plutôt qu'en "disponible" (comportement précédent incohérent : un retour endommagé rendait l'équipement immédiatement re-disponible).
+- Maintenance : si la checklist trouve un défaut, l'état de l'équipement est mis à jour en conséquence (jamais "bon" tant que le statut reste en panne/maintenance).
 
 ## [0.5.0] - 2026-08-27
 

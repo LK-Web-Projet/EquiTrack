@@ -33,15 +33,14 @@ export const POST = withAdmin(async (req: NextRequest) => {
     if (checklist?.length) {
       const rawCondition = await applyChecklistResults(tx, { equipment_id: created.equipment_id, maintenance_id: created.id, ratings: checklist })
       if (rawCondition) {
+        // Le statut n'est jamais modifié ici — seulement l'état. Du matériel disponible peut très
+        // bien être en état correct/mauvais (pas de contrainte sur disponible/emprunté) ; seul un
+        // équipement en panne/maintenance ne peut jamais rester "bon" (voir conditionForStatus).
         const equipment = await tx.equipment.findUniqueOrThrow({ where: { id: created.equipment_id }, select: { status: true } })
-        let status = equipment.status as EquipmentStatus
-        if ((status === 'available' || status === 'borrowed') && rawCondition !== 'good') {
-          // La checklist constate un défaut : on ne peut pas laisser l'équipement marqué disponible.
-          status = 'maintenance'
-        }
+        const condition = conditionForStatus(equipment.status as EquipmentStatus, rawCondition)
         await tx.equipment.update({
           where: { id: created.equipment_id },
-          data: { status, condition: conditionForStatus(status, rawCondition), updated_at: new Date() },
+          data: { condition, updated_at: new Date() },
         })
       }
     }

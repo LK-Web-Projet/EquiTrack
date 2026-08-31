@@ -426,7 +426,7 @@ export default function CategoryDetailPage() {
                         type="radio"
                         name="edit-status"
                         checked={editForm.status === s}
-                        onChange={() => setEditForm(f => ({ ...f, status: s, condition: conditionForStatus(s, f.condition) }))}
+                        onChange={() => setEditForm(f => ({ ...f, status: s, condition: conditionForStatus(s, f.condition) ?? f.condition }))}
                         style={{ accentColor: 'var(--et-primary)' }}
                       />
                       <span className={STATUS_BADGE[s]}>{STATUS_LABELS[s]}</span>
@@ -435,8 +435,9 @@ export default function CategoryDetailPage() {
                 </div>
               </div>
 
-              {/* État / Condition — options limitées à ce que le statut choisi autorise : disponible/emprunté
-                  ⇒ toujours "bon état" ; en panne/maintenance ⇒ jamais "bon état". */}
+              {/* État / Condition — seule restriction : en panne/maintenance ne peut jamais être "bon
+                  état". Disponible/emprunté autorise n'importe quel état (le matériel disponible
+                  n'est pas forcément en parfait état). */}
               <div>
                 <label className="et-label flex items-center gap-1.5">
                   <Tag className="w-3.5 h-3.5" /> État général
