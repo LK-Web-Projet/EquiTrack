@@ -20,7 +20,7 @@ Format de chaque entrée :
 À chaque changement notable : incrémenter `version` dans `package.json`, puis ajouter une entrée ici (la plus récente en haut).
 
 ---
-
+Rebuild
 ## [0.6.0] - 2026-08-27
 
 ### Ajouté
