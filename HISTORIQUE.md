@@ -21,6 +21,15 @@ Format de chaque entrée :
 
 ---
 
+## [0.6.1] - 2026-08-27
+
+### Corrigé
+- **Incident production** : la contrainte `equipment_status_condition_check` de la 0.6.0 exigeait à tort qu'un équipement disponible/emprunté soit toujours en "bon état" — hypothèse fausse, du matériel disponible peut légitimement être en état correct ou mauvais. Cette contrainte a fait échouer la migration en production (des lignes réelles la violaient), bloquant le démarrage du conteneur (`P3009`). Nouvelle migration `20260827150000_fix_equipment_status_condition_check` qui supprime la contrainte d'origine et la remplace par la seule règle réelle : **en panne/maintenance ⇒ jamais "bon état"**, aucune contrainte sur disponible/emprunté.
+- `src/lib/equipment-state.ts` (`conditionForStatus`) simplifié en conséquence : ne force plus rien pour disponible/emprunté (renvoie `undefined` = ne touche pas au champ), continue à empêcher "bon état" en panne/maintenance.
+- Retrait de la logique qui faisait automatiquement basculer le statut en maintenance quand la checklist détectait un défaut sur du matériel disponible (`processReturn`, `POST /api/maintenances`) — n'était nécessaire que pour la contrainte erronée, plus besoin : du matériel disponible en état correct/mauvais est désormais accepté tel quel.
+- Formulaire de création d'équipement : le sélecteur d'état initial, retiré en 0.6.0, est restauré (redevenu pertinent).
+- Une donnée corrigée à tort en base de dev lors de la 0.6.0 (un équipement disponible en mauvais état, faussement basculé en maintenance) a été restaurée à son état d'origine.
+
 ## [0.6.0] - 2026-08-27
 
 ### Ajouté
